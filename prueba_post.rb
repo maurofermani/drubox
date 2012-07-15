@@ -1,13 +1,23 @@
 require "uri"
 require 'net/http'
 
-url = "http://localhost:3000/users/" #llamada al create del usuario 
+#si la ruta para el create es parametro por post mas /users/
+#url = "http://localhost:3000/users/" #llamada al create del usuario 
 
 #parametros del formulario del new del usuario
+#params = {
+# "user[name]"=>"Nuevo",
+# "user[login]"=>"Nuevo",
+# "user[pass]"=>"Nuevo1234"
+#}
+
+url = "http://localhost:3000/projects.json"
+
 params = {
- "user[name]"=>"Nuevo",
- "user[login]"=>"Nuevo",
- "user[pass]"=>"Nuevo1234"
+  "project[name]" => "todo",
+  "project[description]" => "prueba...",
+  "user_id" => "1",
+  "path" => "/home/nose"
 }
 
 
