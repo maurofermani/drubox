@@ -1,0 +1,28 @@
+#include <QtGui/QApplication>
+#include <QtGui/QDirModel>
+#include <QtGui/QTreeView>
+require 'Qt4'
+
+
+    app = Qt::Application.new(ARGV);
+
+    #model = Qt::DirModel.new()
+    model = Qt::FileSystemModel.new()
+    tree = Qt::TreeView.new()
+
+    tree.setModel(model);
+    model.setRootPath("/home/p4c/Escritorio")
+
+    #tree.setRootIndex(model.index(Qt::FileSystemModel::homePath()));
+    #tree.setColumnHidden( 1, true );
+    #tree.setColumnHidden( 2, true );
+    #tree.setColumnHidden( 3, true );
+
+    #tree.setWindowTitle(Qt::Object::tr("Dir View:")+Qt::FileSystemModel::homePath());
+    tree.resize(640, 480);
+    tree.show();
+
+    app.exec();
+
+
+
