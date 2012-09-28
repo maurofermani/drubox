@@ -1,7 +1,9 @@
 class Proyecto
 
 	#PROJECTS_PATH = "/home/p4c/Escritorio/ejrubyqt/drubox/drubox_files"
-	PROJECTS_PATH = "./drubox_files"
+	#PROJECTS_PATH = "./drubox_files"
+	PROJECT_FOLDER = "drubox_files"
+	PROJECTS_PATH = File.expand_path($0).chomp($0)+PROJECT_FOLDER
 
 	attr_reader :id, :nombre, :descripcion, :tree
 
@@ -11,6 +13,12 @@ class Proyecto
 		@descripcion = descripcion
 		@carpeta = @nombre#.gsub(/ /,'')+"_id"+@id.to_s
 		@tree = nil
+		
+		#puts "file: "+__FILE__
+		#puts "0: "+$0
+		#puts "exp: "+File.expand_path($0)
+		#puts "final: "+File.expand_path($0).chomp("/"+$0)
+		puts PROJECTS_PATH
 	end
 
 	def abrirProyecto()
@@ -25,6 +33,7 @@ class Proyecto
 			puts "no existe "+@carpeta
 			Dir.mkdir(PROJECTS_PATH+"/"+@carpeta)
 			@git = Git.init(PROJECTS_PATH+"/"+@carpeta)
+			
 		end
 		#if(@tree!=nil)
 			@tree = RuboxTree.new(nil,PROJECTS_PATH+"/"+@carpeta)
