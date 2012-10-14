@@ -1,5 +1,3 @@
-require 'git'
-
 class RuboxTree < Qt::TreeWidget
 #class RuboxTree < Qt::TreeView
 	
@@ -62,5 +60,33 @@ class RuboxTree < Qt::TreeWidget
 			end
 		end
 	end
+
+	def addFile(files, path)
+		files.each{ |file|
+			item = Qt::TreeWidgetItem.new()
+			item.setText(0, File.basename(file))
+			item.setText(1, File.mtime(file).strftime("%Y-%m-%d %I:%M:%S %p"))
+			item.setText(2, (File.size(file).to_s + ' bytes'))
+			item.setText(3, File.dirname(file) + '/')
+			item.setIcon(0, Qt::Icon.new(FILE_ICON_PATH))
+			addTopLevelItem(item)
+		}
+	end
+
+	def addFolder(folder)
+		folder_item = Qt::TreeWidgetItem.new()
+		folder_item.setText(0, File.basename(folder))
+		folder_item.setText(1, File.mtime(folder).strftime("%Y-%m-%d %I:%M:%S %p"))
+		folder_item.setText(2, (File.size(folder).to_s + ' bytes'))
+		folder_item.setText(3, File.dirname(folder) + '/')
+		folder_item.setIcon(0, Qt::Icon.new(FOLDER_ICON_PATH))
+		addTopLevelItem(folder_item)
+		populate(self,folder,folder_item)
+	end
+
+	def removeSelectedFolder
+
+	
+	
 
 end

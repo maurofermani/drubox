@@ -50,7 +50,19 @@ class Server
 		end	
 	end
 
-	
+	def self.infoUsuario(cookie, id)
+		headers = {
+			'Cookie' => cookie
+		}
 
+		resp, data = @@http.get("/users/#{id}.json",headers)
 
+		if (resp.class==Net::HTTPOK)
+			rh = JSON.parse(resp.body)
+			return rh
+		else
+			return nil
+		end	
+	end
+		
 end

@@ -3,13 +3,21 @@ require './proyecto.rb'
 
 class Usuario
 
+	attr_reader :id, :nombre, :descripcion, :tree
+
 	def initialize()
 		@cookie = nil
 		@proyectos = nil
+		@id = nil		
+		@nombre = nil
+		@mail = nil
 	end
 
 	def iniciarSesion(login,password)
 		@cookie =Server::iniciarSesion(login,password)
+		#if (@cookie !=nil)
+			
+		#end
 		return @cookie != nil
 	end
 
@@ -27,5 +35,7 @@ class Usuario
 	def getProyectos()
 		return @proyectos
 	end
+
+	
 
 end
