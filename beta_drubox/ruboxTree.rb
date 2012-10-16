@@ -84,8 +84,28 @@ class RuboxTree < Qt::TreeWidget
 		populate(self,folder,folder_item)
 	end
 
-	def removeSelectedFolder
-
+	def removeSelectedItem()
+		item = selectedItems()
+		if (!item.empty?)		
+			path = item[0].text(3)+item[0].text(0) 
+			if (File.ftype(path) == 'directory')
+				msg = "Desea eliminar el directorio #{item[0].text(0)}? (Se eliminara tambien su contenido)"
+			else
+				msg = "Desea eliminar el archivo #{item[0].text(0)}?"
+			end			
+			
+			op = Qt::MessageBox::warning(self,tr('DRubox'),tr(msg),Qt::MessageBox::Yes | Qt::MessageBox::No)
+			if (op==Qt::MessageBox::Yes)
+				parent = item[0].parent() ? item[0].parent() : invisibleRootItem()
+				i = parent.takeChild(parent.indexOfChild(item[0]))
+				puts "sacado: "+i.text(3)+i.text(0)
+				puts "path: "+path
+				return path
+			else
+				return nil
+			end
+		end
+	end
 	
 	
 

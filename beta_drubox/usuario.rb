@@ -3,14 +3,15 @@ require './proyecto.rb'
 
 class Usuario
 
-	attr_reader :id, :nombre, :descripcion, :tree
+	attr_reader :id, :nombre, :descripcion
 
 	def initialize()
 		@cookie = nil
-		@proyectos = nil
+		@projects = nil
 		@id = nil		
 		@nombre = nil
 		@mail = nil
+		@currentProject = nil
 	end
 
 	def iniciarSesion(login,password)
@@ -22,18 +23,33 @@ class Usuario
 	end
 
 	def cargarProyectos()
-		@proyectos = Array.new()		
+		@projects = Array.new()		
 		proys = Server::listaProyectos(@cookie)
 		proys.each { |p_id|
 			#@proyectos.push(p['path'])
 			p_info = Server::infoProyecto(@cookie, p_id['project_id'])
-			@proyectos.push( Proyecto.new(p_info['id'], p_info['name'], p_info['description']) )
+			@projects.push( Proyecto.new(p_info['id'], p_info['name'], p_info['description']) )
 		}
-		return @proyectos
+		getProjectName()
 	end
 
-	def getProyectos()
-		return @proyectos
+	def getProjectName()
+		projectName = Array.new()
+		@projects.each{	|p|
+			projectName.push(p.nombre()+' ('+p.descripcion()+')')
+		}
+		return projectName
+	end
+
+	def getCurrentProject()
+		@currentProject
+	end
+
+	def setCurrentProject(index)
+		@currentProjectId = index
+		@currentProject = @projects[index]
+		@currentProject.abrirProyecto()
+		puts "Indice proyecto: "+index.to_s+" -> "+@currentProject.nombre()
 	end
 
 	

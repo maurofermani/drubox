@@ -24,7 +24,7 @@ class Proyecto
 		#puts "final: "+File.expand_path($0).chomp("/"+$0)
 	end
 
-	def pullAndPush()
+	def pull()
 
 		begin
 			@git.fetch('origin')
@@ -75,7 +75,7 @@ class Proyecto
 				}
 				@git.commit("finally...")
 			ensure					
-				@git.push('origin','master')
+				#@git.push('origin','master')
 			end
 		end
 	
@@ -91,6 +91,10 @@ class Proyecto
 		puts "salio"	
 	end
 
+	def push()
+		@git.push('origin','master')
+	end
+
 	def abrirProyecto()
 		if(File.directory?(PROJECTS_PATH+"/"+@carpeta))
 			if(File.directory?(PROJECTS_PATH+"/"+@carpeta+"/.git"))
@@ -103,7 +107,8 @@ class Proyecto
 					puts "Error origen ya existe: "+error_git.to_s	
 				end
 				
-				pullAndPush()				
+				pull()
+				push()				
 
 			else
 				puts "existe sin git "+@carpeta		
@@ -143,18 +148,55 @@ class Proyecto
 		FileUtils.cp_r(folder,PROJECTS_PATH+"/"+@carpeta+"/"+File.basename(folder))
 		@tree.addFolder(PROJECTS_PATH+"/"+@carpeta+"/"+File.basename(folder))
 	end
+
+	def remove()
+		rm_path = @tree.removeSelectedItem()
+		# ver si hacer el git remove aca o dejarlo antes del sync como esta ahora
+		if (rm_path!=nil)
+			if(File.ftype(rm_path) == 'directory')
+				FileUtils.remove_dir(rm_path)
+			else
+				FileUtils.remove_file(rm_path)
+			end
+		end
+	end
 	
 	def status()
 		#puts @git.status.pretty
 		#sync()
 	end
 
-	def sync()
+	def upload()
 		@git.status.each{ |f|
-			@git.add(f.path)
+			if (f.type =='D')
+				@git.remove(f.path)
+			else
+				@git.add(f.path)
+			end
 		}
-		@git.commit("prepare for sync")
-		pullAndPush()
+		@git.commit("prepare for upload")
+		pull()
+		push()
 	end
+
+	def download()
+		@git.status.each{ |f|
+			if (f.type =='D')
+				@git.remove(f.path)
+			else
+				@git.add(f.path)
+			end
+		}
+		begin
+		@git.commit("prepare for download") ##ver esto... //pincha si no hay  nada para hacer commit...
+		rescue Git::GitExecuteError => error_git #working dir clean?
+			if (error_git.to_s.include?("nothing to commit"))
+				puts "working directory clean"
+			end
+		end		
+		pull()
+	end
+
+	
 
 end

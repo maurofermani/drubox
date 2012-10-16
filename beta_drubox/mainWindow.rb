@@ -5,7 +5,7 @@ require './usuario.rb'
 
 class DRuboxWindow < Qt::MainWindow
 
-	slots 'login()', 'projectSelected(int)','addFile()','addFolder()','remove()','sync()'
+	slots 'login()', 'projectSelected(int)','addFile()','addFolder()','remove()','upload()','download()'
 
 	def initialize(parent = nil)
 		super(parent)		
@@ -56,10 +56,15 @@ class DRuboxWindow < Qt::MainWindow
 		@removeAction.setStatusTip(tr("Eliminar archivo o carpeta"))
 		connect(@removeAction,SIGNAL('triggered()'),self,SLOT('remove()'))
 
-		@syncAction = Qt::Action.new(tr("&Sincronizar"),self)
-		@syncAction.setIcon(Qt::Icon.new('./images/Sync.png'))
-		@syncAction.setStatusTip(tr("Sincronizar datos"))
-		connect(@syncAction,SIGNAL('triggered()'),self,SLOT('sync()'))	
+		@uploadAction = Qt::Action.new(tr("&Subir cambios"),self)
+		@uploadAction.setIcon(Qt::Icon.new('./images/up_b.png'))
+		@uploadAction.setStatusTip(tr("Subir los cambios al servidor..."))
+		connect(@uploadAction,SIGNAL('triggered()'),self,SLOT('upload()'))
+
+		@downAction = Qt::Action.new(tr("&Bajar cambios"),self)
+		@downAction.setIcon(Qt::Icon.new('./images/down_b.png'))
+		@downAction.setStatusTip(tr("Bajar los cambios del servidor..."))
+		connect(@downAction,SIGNAL('triggered()'),self,SLOT('download()'))
 
 	end
 
@@ -72,7 +77,8 @@ class DRuboxWindow < Qt::MainWindow
 		@addMenu = menuBar().addMenu(tr("&Agregar"))
 		@addMenu.addAction(@addFileAction)
 		@addMenu.addAction(@addFolderAction)
-		@addMenu.addAction(@syncAction)
+		@addMenu.addAction(@uploadAction)
+		@addMenu.addAction(@downAction)
 	end
 
 	def createToolBars()
@@ -90,7 +96,8 @@ class DRuboxWindow < Qt::MainWindow
 		@ruboxToolBar.addAction(@addFileAction)
 		@ruboxToolBar.addAction(@addFolderAction)
 		@ruboxToolBar.addAction(@removeAction)
-		@ruboxToolBar.addAction(@syncAction)
+		@ruboxToolBar.addAction(@uploadAction)
+		@ruboxToolBar.addAction(@downAction)
 	end
 
 	def createStatusBar()
@@ -113,18 +120,11 @@ class DRuboxWindow < Qt::MainWindow
 				firstIndex = model.index(0,@projectCombo.modelColumn(),@projectCombo.rootModelIndex())
 				firstItem = model.itemFromIndex(firstIndex)
 				firstItem.setSelectable(false)
-				firstItem.setToolTip("No elegir...")
-		
-				@projectsMap = Array.new()
-				combo_index = 1
+				firstItem.setToolTip("No elegir...") ###ver esto...
+	
 				proyectos.each{ |p|
-					@projectCombo.addItem(p.nombre()+' ('+p.descripcion()+')')
-					@projectsMap[combo_index] = p
-					combo_index = combo_index + 1
+					@projectCombo.addItem(p)
 				}
-				#puts "Indice: "+@projectCombo.currentIndex().to_s
-				#@projectCombo.setCurrentIndex(-1)
-				#puts "Indice: "+@projectCombo.currentIndex().to_s
 				connect(@projectCombo,SIGNAL('currentIndexChanged(int)'),self,SLOT('projectSelected(int)'))
 			else
 				puts "No iniciada"
@@ -133,28 +133,32 @@ class DRuboxWindow < Qt::MainWindow
 	end
 
 	def projectSelected(index)
-		puts "\nIndice proyecto: "+index.to_s+" -> "+@projectsMap[index].nombre()
-		@currentProject = @projectsMap[index]
-		setCentralWidget(@currentProject.abrirProyecto())
+		@usuario.setCurrentProject(index-1)
+		setCentralWidget(@usuario.getCurrentProject().tree())
 	end
 
 	def addFile()
 		@files = Qt::FileDialog::getOpenFileNames(self,"Seleccione los archivos a agregar","/home")
-		@currentProject.addFile(@files, "")
+		@usuario.getCurrentProject().addFile(@files, "")
 	end
 
 	def addFolder()
 		@folder = Qt::FileDialog::getExistingDirectory(self,"Seleccione las carpetas a agregar","/home",Qt::FileDialog::ShowDirsOnly)
-		@currentProject.addFolder(@folder, "")
+		@usuario.getCurrentProject().addFolder(@folder, "")
 		puts @folder.to_s
 	end
 
 	def remove()
 		puts "remove called"
+		@usuario.getCurrentProject().remove()
 	end
 
-	def sync()
-		@currentProject.sync()
+	def upload()
+		@usuario.getCurrentProject().upload()
+	end
+
+	def download()
+		@usuario.getCurrentProject().download()	
 	end
 
 end #class
