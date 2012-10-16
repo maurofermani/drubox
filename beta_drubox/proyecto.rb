@@ -179,6 +179,8 @@ class Proyecto
 		rescue Git::GitExecuteError => error_git #working dir clean?
 			if (error_git.to_s.include?("nothing to commit"))
 				puts "working directory clean"
+			else
+				puts error_git.to_s
 			end
 		end	
 		pull()
@@ -198,6 +200,8 @@ class Proyecto
 		rescue Git::GitExecuteError => error_git #working dir clean?
 			if (error_git.to_s.include?("nothing to commit"))
 				puts "working directory clean"
+			else
+				puts error_git.to_s
 			end
 		end		
 		pull()
