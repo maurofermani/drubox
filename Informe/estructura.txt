@@ -1,23 +1,22 @@
-índice
-1. Introducción
-	a. ¿Qué es Cloud Computing?
-		i.   Atributos Del Cloud Computing
-		ii.  Tecnologías Relevantes
-		iii. Modelos De Distribución De Servicios De Cloud Computing
-		iv.  Modelos De Despliegue De Cloud Computing
-	b. Seguridad En Cloud Computing
-		i.   Beneficios De Seguridad
-		ii.  Riesgos De Seguridad
-		iii. Vulnerabilidades 
-2. Implemetación De Un Software Como Servicio
-	a. Tecnologías Utilizadas
-		i.   Git
-		ii.  Lenguaje De Programación Ruby
-		iii. Framework web Ruby on  Rails
-		iv.  Base De Datos Mysql
-		v.   Librerías Qt
-	b. Interconexión De Las Diferentes Tecnologías
-	c. Funcionamiento Del Programa
-	d. Ventajas Y Desventajas
-3. Conclusion
-4. Anexos
+1 - Introducción
+	a - ¿Qué es Cloud Computing?
+		I   - Atributos Del Cloud Computing
+		II  - Tecnologías Relevantes
+		III - Modelos De Distribución De Servicios De Cloud Computing
+		IV  - Modelos De Despliegue De Cloud Computing
+3 - Seguridad En Cloud Computing
+	a - Beneficios De Seguridad
+	b - Riesgos De Seguridad
+	c - Vulnerabilidades
+3 - Implemetación De Un Software Como Servicio
+	a - Tecnologías Utilizadas
+		I   - Git
+		II  - Lenguaje De Programación Ruby
+		III - Framework web Ruby on Rails
+		IV  - Base De Datos Mysql
+		V   - Librerías Qt
+	b - Interconexión De Las Diferentes Tecnologías
+	c - Funcionamiento Del Programa
+	d - Ventajas Y Desventajas (aca la idea es hacer comparacion de riesgos y beneficios vistos en el punto 1.
+4 - Conclusion
+5 - Anexos
