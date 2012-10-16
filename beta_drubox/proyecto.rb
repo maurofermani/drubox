@@ -174,7 +174,13 @@ class Proyecto
 				@git.add(f.path)
 			end
 		}
-		@git.commit("prepare for upload")
+		begin
+			@git.commit("prepare for upload")
+		rescue Git::GitExecuteError => error_git #working dir clean?
+			if (error_git.to_s.include?("nothing to commit"))
+				puts "working directory clean"
+			end
+		end	
 		pull()
 		push()
 	end
@@ -188,7 +194,7 @@ class Proyecto
 			end
 		}
 		begin
-		@git.commit("prepare for download") ##ver esto... //pincha si no hay  nada para hacer commit...
+			@git.commit("prepare for download") ##ver esto... //pincha si no hay  nada para hacer commit...
 		rescue Git::GitExecuteError => error_git #working dir clean?
 			if (error_git.to_s.include?("nothing to commit"))
 				puts "working directory clean"
