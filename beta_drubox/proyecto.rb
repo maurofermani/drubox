@@ -34,46 +34,51 @@ class Proyecto
 			begin	
 				@git.merge("origin/master","-m update desde el server")
 			rescue Git::GitExecuteError => error_git #hay conflicto :(
-
+							
 			#si no hay 1er commit, el fetch no falla.... hay q ver aca si es conflicto o directorio limpio
-				@git.each_conflict{ |f| 
+				if(error_git.to_s.include?("not something we can merge"))
+					puts "veeerr: "+error_git.to_s
+				else 				
 
-					ours_commit = @git.gcommit('ORIG_HEAD')
-					ours_author = ours_commit.author.name
+					@git.each_conflict{ |f| 
 
-					theirs_commit = @git.gcommit('MERGE_HEAD')
-					theirs_author = theirs_commit.author.name
+						ours_commit = @git.gcommit('ORIG_HEAD')
+						ours_author = ours_commit.author.name
 
-					if (ours_author == theirs_author)
-					add_ours = " ("+ours_author+" v1)"
-					add_theirs = " ("+theirs_author+" v2)"
-					else
-					add_ours = " ("+ours_author+")"
-					add_theirs = " ("+theirs_author+")"
-					end
+						theirs_commit = @git.gcommit('MERGE_HEAD')
+						theirs_author = theirs_commit.author.name
 
-					nombre = f.chomp(File.extname(f))
+						if (ours_author == theirs_author)
+						add_ours = " ("+ours_author+" v1)"
+						add_theirs = " ("+theirs_author+" v2)"
+						else
+						add_ours = " ("+ours_author+")"
+						add_theirs = " ("+theirs_author+")"
+						end
 
-					fno = nombre+add_ours+File.extname(f)
+						nombre = f.chomp(File.extname(f))
 
-					puts fno
-					#en lugar de cambiarle el nombre a los 2 archivos, cambiarlo solo al que no es el nuestro
-					@git.checkout_file("--ours",f)
-					File.rename(PROJECTS_PATH+"/"+@carpeta+"/"+f,PROJECTS_PATH+"/"+@carpeta+"/"+fno)
+						fno = nombre+add_ours+File.extname(f)
 
-					fnt = nombre+add_theirs+File.extname(f)
+						puts fno
+						#en lugar de cambiarle el nombre a los 2 archivos, cambiarlo solo al que no es el nuestro
+						@git.checkout_file("--ours",f)
+						File.rename(PROJECTS_PATH+"/"+@carpeta+"/"+f,PROJECTS_PATH+"/"+@carpeta+"/"+fno)
 
-					puts fnt							
+						fnt = nombre+add_theirs+File.extname(f)
 
-					@git.checkout_file("--theirs",f)
-					File.rename(PROJECTS_PATH+"/"+@carpeta+"/"+f,PROJECTS_PATH+"/"+@carpeta+"/"+fnt)
+						puts fnt							
+
+						@git.checkout_file("--theirs",f)
+						File.rename(PROJECTS_PATH+"/"+@carpeta+"/"+f,PROJECTS_PATH+"/"+@carpeta+"/"+fnt)
 				
-					@git.add(fno)
-					@git.add(fnt)
-					@git.remove(f)
+						@git.add(fno)
+						@git.add(fnt)
+						@git.remove(f)
 				
-				}
-				@git.commit("finally...")
+					}
+					@git.commit("finally...")
+				end
 			ensure					
 				#@git.push('origin','master')
 			end
@@ -92,7 +97,12 @@ class Proyecto
 	end
 
 	def push()
+		begin
 		@git.push('origin','master')
+		rescue Git::GitExecuteError => error_git #remote ya creado
+			puts "error en push: "+error_git.to_s
+		end
+		puts "fue push!!"
 	end
 
 	def abrirProyecto()
@@ -107,8 +117,8 @@ class Proyecto
 					puts "Error origen ya existe: "+error_git.to_s	
 				end
 				
-				pull()
-				push()				
+				#pull()
+				#push()				
 
 			else
 				puts "existe sin git "+@carpeta		
@@ -166,14 +176,30 @@ class Proyecto
 		#sync()
 	end
 
-	def upload()
-		@git.status.each{ |f|
+
+	def stageFiles()
+		begin
+			first_commit = @git.log().first()
+		rescue	Git::GitExecuteError => error_git #no hay 1er commit	
+			puts error_git.to_s
+			Dir["#{PROJECTS_PATH+'/'+@carpeta}/*"].each{ |f|
+			 @git.add(f)
+			}
+		else 
+			@git.status.each{ |f|
 			if (f.type =='D')
 				@git.remove(f.path)
 			else
 				@git.add(f.path)
 			end
 		}
+		end
+	end
+
+	def upload()
+		
+		stageFiles()
+		
 		begin
 			@git.commit("prepare for upload")
 		rescue Git::GitExecuteError => error_git #working dir clean?
@@ -188,13 +214,9 @@ class Proyecto
 	end
 
 	def download()
-		@git.status.each{ |f|
-			if (f.type =='D')
-				@git.remove(f.path)
-			else
-				@git.add(f.path)
-			end
-		}
+	
+		stageFiles()
+
 		begin
 			@git.commit("prepare for download") ##ver esto... //pincha si no hay  nada para hacer commit...
 		rescue Git::GitExecuteError => error_git #working dir clean?
