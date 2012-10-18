@@ -1,9 +1,6 @@
 require 'git'
 
 class Proyecto
-
-	#PROJECTS_PATH = "/home/p4c/Escritorio/ejrubyqt/drubox/drubox_files"
-	#PROJECTS_PATH = "./drubox_files"
 	
 	PROJECT_FOLDER = "drubox_files"
 	PROJECTS_PATH = File.expand_path("../../..",$0)+"/"+PROJECT_FOLDER
@@ -11,17 +8,17 @@ class Proyecto
 
 	attr_reader :id, :nombre, :descripcion, :tree
 
-	def initialize(id, nombre, descripcion)
+	def initialize(id, nombre, descripcion, username)
 		@id = id
 		@nombre = nombre
 		@descripcion = descripcion
 		@carpeta = @nombre#.gsub(/ /,'')+"_id"+@id.to_s
 		@tree = nil
+		@username = username
 		
-		#puts "file: "+__FILE__
-		#puts "0: "+$0
-		#puts "exp: "+File.expand_path($0)
-		#puts "final: "+File.expand_path($0).chomp("/"+$0)
+		@user_projects_path = PROJECTS_PATH+"_"+@username #path de proyectos del usuario
+		@project_path = @user_projects_path+"/"+@carpeta #path del proyecto
+		@server_project_path = SERVER_PROJECTS_PATH+"/"+@carpeta
 	end
 
 	def pull()
@@ -63,14 +60,14 @@ class Proyecto
 						puts fno
 						#en lugar de cambiarle el nombre a los 2 archivos, cambiarlo solo al que no es el nuestro
 						@git.checkout_file("--ours",f)
-						File.rename(PROJECTS_PATH+"/"+@carpeta+"/"+f,PROJECTS_PATH+"/"+@carpeta+"/"+fno)
+						File.rename(@project_path+"/"+f,@project_path+"/"+fno)
 
 						fnt = nombre+add_theirs+File.extname(f)
 
 						puts fnt							
 
 						@git.checkout_file("--theirs",f)
-						File.rename(PROJECTS_PATH+"/"+@carpeta+"/"+f,PROJECTS_PATH+"/"+@carpeta+"/"+fnt)
+						File.rename(@project_path+"/"+f,@project_path+"/"+fnt)
 				
 						@git.add(fno)
 						@git.add(fnt)
@@ -106,13 +103,18 @@ class Proyecto
 	end
 
 	def abrirProyecto()
-		if(File.directory?(PROJECTS_PATH+"/"+@carpeta))
-			if(File.directory?(PROJECTS_PATH+"/"+@carpeta+"/.git"))
+
+		if(!File.directory?(@user_projects_path))
+			Dir.mkdir(@user_projects_path)
+		end
+
+		if(File.directory?(@project_path))
+			if(File.directory?(@project_path+"/.git"))
 				puts "existe con git "+@carpeta
-				@git = Git.open(PROJECTS_PATH+"/"+@carpeta)
+				@git = Git.open(@project_path)
 				
 				begin
-					@git.add_remote('origin',SERVER_PROJECTS_PATH+"/"+@carpeta)	
+					@git.add_remote('origin',@server_project_path)	
 				rescue Git::GitExecuteError => error_git #remote ya creado
 					puts "Error origen ya existe: "+error_git.to_s	
 				end
@@ -133,12 +135,12 @@ class Proyecto
 			#puts "ssh://localhost/var/cache/git/Mi\\ proyecto"
 			#@git.add_remote('server',SERVER_PROJECTS_PATH+"/"+@carpeta)
 			#@git.pull("server","server/master","Pull de server a "+@carpeta)
-			@git = Git.clone(SERVER_PROJECTS_PATH+"/"+@carpeta,@carpeta,{:path => PROJECTS_PATH})	
+			@git = Git.clone(@server_project_path,@carpeta,{:path => @user_projects_path})	
 
 			
 		end
 		#if(@tree!=nil)
-			@tree = RuboxTree.new(nil,PROJECTS_PATH+"/"+@carpeta)
+			@tree = RuboxTree.new(nil,@project_path)
 		#else
 		#	@tree.populate()
 		#end
@@ -147,16 +149,16 @@ class Proyecto
 	def addFile(files, path)
 				
 		files.each{ |f|
-			FileUtils.cp(f,PROJECTS_PATH+"/"+@carpeta+"/"+File.basename(f))	
-			f.replace(PROJECTS_PATH+"/"+@carpeta+"/"+File.basename(f))
+			FileUtils.cp(f,@project_path+"/"+File.basename(f))	
+			f.replace(@project_path+"/"+File.basename(f))
 		}
 		puts "ejem: "+files.to_s
 		@tree.addFile(files, path)	
 	end
 
 	def addFolder(folder, path)
-		FileUtils.cp_r(folder,PROJECTS_PATH+"/"+@carpeta+"/"+File.basename(folder))
-		@tree.addFolder(PROJECTS_PATH+"/"+@carpeta+"/"+File.basename(folder))
+		FileUtils.cp_r(folder,@project_path+"/"+File.basename(folder))
+		@tree.addFolder(@project_path+"/"+File.basename(folder))
 	end
 
 	def remove()
@@ -182,7 +184,7 @@ class Proyecto
 			first_commit = @git.log().first()
 		rescue	Git::GitExecuteError => error_git #no hay 1er commit	
 			puts error_git.to_s
-			Dir["#{PROJECTS_PATH+'/'+@carpeta}/*"].each{ |f|
+			Dir["#{@project_path}/*"].each{ |f|
 			 @git.add(f)
 			}
 		else 

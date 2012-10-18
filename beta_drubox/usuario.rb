@@ -16,8 +16,9 @@ class Usuario
 
 	def iniciarSesion(login,password)
 		@cookie =Server::iniciarSesion(login,password)
+		@login = login
 		#if (@cookie !=nil)
-			
+		#	if(File.directory?())
 		#end
 		return @cookie != nil
 	end
@@ -28,7 +29,7 @@ class Usuario
 		proys.each { |p_id|
 			#@proyectos.push(p['path'])
 			p_info = Server::infoProyecto(@cookie, p_id['project_id'])
-			@projects.push( Proyecto.new(p_info['id'], p_info['name'], p_info['description']) )
+			@projects.push( Proyecto.new(p_info['id'], p_info['name'], p_info['description'], @login) )
 		}
 		getProjectName()
 	end
