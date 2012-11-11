@@ -23,7 +23,8 @@ class RuboxTree < Qt::TreeWidget
 		#g = Git.init(FOLDER_PATH)
 		#g = Git.open(FOLDER_PATH)
 		
-		populate(self,path)
+		@path = path
+		populate(self,@path)
 		
 		#puts g.status
 		#puts g.status.added
@@ -106,7 +107,21 @@ class RuboxTree < Qt::TreeWidget
 			end
 		end
 	end
-	
-	
 
+	def getSelectedFile()
+		item = selectedItems()
+		path = nil
+		if (!item.empty?)		
+			path = item[0].text(3)+item[0].text(0)
+			if(File.ftype(path) != 'file')
+				path = nil
+			end
+		end
+		return path
+	end
+	
+	def refresh()
+		clear()
+		populate(self,@path)
+	end
 end

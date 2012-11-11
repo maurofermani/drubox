@@ -1,11 +1,12 @@
 require 'Qt4'
 require './ruboxTree.rb'
 require './loginDialog.rb'
+require './timeMachineDialog.rb'
 require './usuario.rb'
 
 class DRuboxWindow < Qt::MainWindow
 
-	slots 'login()', 'projectSelected(int)','addFile()','addFolder()','remove()','upload()','download()'
+	slots 'login()', 'projectSelected(int)','addFile()','addFolder()','remove()','upload()','download()','timeMachine()'
 
 	def initialize(parent = nil)
 		super(parent)		
@@ -66,6 +67,11 @@ class DRuboxWindow < Qt::MainWindow
 		@downAction.setStatusTip(tr("Bajar los cambios del servidor..."))
 		connect(@downAction,SIGNAL('triggered()'),self,SLOT('download()'))
 
+		@timeMachineAction = Qt::Action.new(tr("&Maquina del tiempo"),self)
+		@timeMachineAction.setIcon(Qt::Icon.new('./images/TimeMachine.png'))
+		@timeMachineAction.setStatusTip(tr("Obtener versiones pasadas de los archivos..."))
+		connect(@timeMachineAction,SIGNAL('triggered()'),self,SLOT('timeMachine()'))
+
 	end
 
 	def createMenus()
@@ -79,6 +85,7 @@ class DRuboxWindow < Qt::MainWindow
 		@addMenu.addAction(@addFolderAction)
 		@addMenu.addAction(@uploadAction)
 		@addMenu.addAction(@downAction)
+		@addMenu.addAction(@timeMachineAction)
 	end
 
 	def createToolBars()
@@ -98,6 +105,7 @@ class DRuboxWindow < Qt::MainWindow
 		@ruboxToolBar.addAction(@removeAction)
 		@ruboxToolBar.addAction(@uploadAction)
 		@ruboxToolBar.addAction(@downAction)
+		@ruboxToolBar.addAction(@timeMachineAction)
 	end
 
 	def createStatusBar()
@@ -154,11 +162,35 @@ class DRuboxWindow < Qt::MainWindow
 	end
 
 	def upload()
-		@usuario.getCurrentProject().upload()
+		cm = Qt::InputDialog::getText(self,tr("Ingrese commmit message"),tr("Commit Message"),Qt::LineEdit::Normal, "", @ok)
+		@usuario.getCurrentProject().upload(cm)
 	end
 
 	def download()
-		@usuario.getCurrentProject().download()	
+		cm = Qt::InputDialog::getText(self,tr("Ingrese commmit message"),tr("Commit Message"),Qt::LineEdit::Normal, "", @ok)
+		@usuario.getCurrentProject().download(cm)	
+	end
+
+	def timeMachine()
+		path = @usuario.getCurrentProject().tree().getSelectedFile()
+		if(path!=nil)
+			commits = @usuario.getCurrentProject().getFileCommits(path)	
+				puts path		
+				commits.each{ |c|
+					puts "Name: "+c.name
+					puts "Author: "+c.author.name
+					puts "Message: "+c.message
+					puts "Author Date: "+c.author_date.to_s
+					puts "Commiter Date: "+c.committer_date.to_s
+					puts "Sha: "+c.sha()
+				}
+				puts commits.size.to_s
+				timeMachineDialog = TimeMachineDialog.new(path, commits, self)
+				if(timeMachineDialog.exec()==Qt::Dialog::Accepted)
+					@usuario.getCurrentProject().recuperarArchivo(path, timeMachineDialog.getNewFileName(), timeMachineDialog.getSelectedSha())	
+				end
+		end
+		
 	end
 
 end #class

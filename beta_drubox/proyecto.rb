@@ -198,12 +198,12 @@ class Proyecto
 		end
 	end
 
-	def upload()
+	def upload(commit_message)
 		
 		stageFiles()
 		
 		begin
-			@git.commit("prepare for upload")
+			@git.commit(commit_message)
 		rescue Git::GitExecuteError => error_git #working dir clean?
 			if (error_git.to_s.include?("nothing to commit"))
 				puts "working directory clean"
@@ -213,14 +213,15 @@ class Proyecto
 		end	
 		pull()
 		push()
+		@tree.refresh()
 	end
 
-	def download()
+	def download(commit_message)
 	
 		stageFiles()
 
 		begin
-			@git.commit("prepare for download") ##ver esto... //pincha si no hay  nada para hacer commit...
+			@git.commit(commit_message) ##ver esto... //pincha si no hay  nada para hacer commit...
 		rescue Git::GitExecuteError => error_git #working dir clean?
 			if (error_git.to_s.include?("nothing to commit"))
 				puts "working directory clean"
@@ -229,8 +230,33 @@ class Proyecto
 			end
 		end		
 		pull()
+		@tree.refresh()
 	end
 
-	
+	def refresh_old()
+		@git.diff("HEAD~1","HEAD").each{ |f|
+			if(f.type=="new") #new agregado
+				puts "agregar: "+f.path		
+			elsif(f.type=="deleted")  #deleted borrado
+ 				puts "borrar: "+f.path	
+			end
+		}
+	end
+
+	def getFileCommits(path)
+		@git.log().object(path)
+	end
+
+	def recuperarArchivo(path, newFileName, sha)	
+		# copiar el archivo rollbackeado con otro nombre, y hacerle un checkout al original al head para tener las 2 versiones...		
+		puts "path: "+path		
+		puts "newFileName: "+newFileName
+		
+		@git.checkout_file(sha,path)
+		FileUtils.cp(path,newFileName)
+		@git.checkout_file("HEAD",path)
+		@tree.addFile([newFileName], nil)
+	end
+
 
 end
