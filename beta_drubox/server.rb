@@ -21,6 +21,13 @@ class Server
 		end
 	end
 
+	def self.cerrarSesion(cookie)
+		headers = {
+			'Cookie' => cookie
+		}
+		resp, data = @@http.get("/logout",headers)
+	end
+
 	def self.listaProyectos(cookie)
 		headers = {
 			'Cookie' => cookie

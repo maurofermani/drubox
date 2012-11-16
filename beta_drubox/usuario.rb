@@ -20,7 +20,12 @@ class Usuario
 		#if (@cookie !=nil)
 		#	if(File.directory?())
 		#end
+		puts "cookie: "+@cookie if(@cookie!=nil)
 		return @cookie != nil
+	end
+
+	def cerrarSesion()
+		Server::cerrarSesion(@cookie)
 	end
 
 	def cargarProyectos()
@@ -49,8 +54,8 @@ class Usuario
 	def setCurrentProject(index)
 		@currentProjectId = index
 		@currentProject = @projects[index]
-		@currentProject.abrirProyecto()
 		puts "Indice proyecto: "+index.to_s+" -> "+@currentProject.nombre()
+		@currentProject.abrirProyecto()
 	end
 
 	

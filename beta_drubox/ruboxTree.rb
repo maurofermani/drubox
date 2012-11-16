@@ -62,26 +62,40 @@ class RuboxTree < Qt::TreeWidget
 		end
 	end
 
-	def addFile(files, path)
-		files.each{ |file|
+	def addFile(files, newPath = nil)
+		
+		path = (newPath==nil)? @path : newPath["path"]
+		files.each{ |f|
+			file = path+"/"+File.basename(f)
+
 			item = Qt::TreeWidgetItem.new()
 			item.setText(0, File.basename(file))
 			item.setText(1, File.mtime(file).strftime("%Y-%m-%d %I:%M:%S %p"))
 			item.setText(2, (File.size(file).to_s + ' bytes'))
 			item.setText(3, File.dirname(file) + '/')
 			item.setIcon(0, Qt::Icon.new(FILE_ICON_PATH))
-			addTopLevelItem(item)
+			if (newPath==nil)
+				addTopLevelItem(item)
+			else
+				 newPath["item"].insertChild(newPath["item"].childCount, item)
+			end	
 		}
 	end
 
-	def addFolder(folder)
+	def addFolder(folderPath, newPath = nil)
+		folder = (newPath==nil)? @path+"/"+File.basename(folderPath) : newPath["path"]+"/"+File.basename(folderPath)
+
 		folder_item = Qt::TreeWidgetItem.new()
 		folder_item.setText(0, File.basename(folder))
 		folder_item.setText(1, File.mtime(folder).strftime("%Y-%m-%d %I:%M:%S %p"))
 		folder_item.setText(2, (File.size(folder).to_s + ' bytes'))
 		folder_item.setText(3, File.dirname(folder) + '/')
 		folder_item.setIcon(0, Qt::Icon.new(FOLDER_ICON_PATH))
-		addTopLevelItem(folder_item)
+		if (newPath==nil)
+			addTopLevelItem(folder_item)
+		else
+			 newPath["item"].insertChild(newPath["item"].childCount, folder_item)
+		end		
 		populate(self,folder,folder_item)
 	end
 
@@ -118,6 +132,18 @@ class RuboxTree < Qt::TreeWidget
 			end
 		end
 		return path
+	end
+
+	def getSelectedFolder()
+		item = selectedItems()
+		folder = nil
+		if (!item.empty?)		
+			path = item[0].text(3)+item[0].text(0)
+			if(File.ftype(path) == 'directory')
+				folder = {"path" => path, "item" => item[0]}
+			end
+		end
+		return folder
 	end
 	
 	def refresh()

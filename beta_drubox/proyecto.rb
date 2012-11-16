@@ -21,7 +21,7 @@ class Proyecto
 		@server_project_path = SERVER_PROJECTS_PATH+"/"+@carpeta
 	end
 
-	def pull()
+	def pull(commit_message)
 
 		begin
 			@git.fetch('origin')
@@ -29,7 +29,7 @@ class Proyecto
 			puts "no hay 1er commit\n"+error_git
 		else #1er commit ok :)
 			begin	
-				@git.merge("origin/master","-m update desde el server")
+				@git.merge("origin/master","-m #{commit_message}: merge")
 			rescue Git::GitExecuteError => error_git #hay conflicto :(
 							
 			#si no hay 1er commit, el fetch no falla.... hay q ver aca si es conflicto o directorio limpio
@@ -74,7 +74,7 @@ class Proyecto
 						@git.remove(f)
 				
 					}
-					@git.commit("finally...")
+					@git.commit("#{commit_message}: merge commit")
 				end
 			ensure					
 				#@git.push('origin','master')
@@ -96,7 +96,7 @@ class Proyecto
 	def push()
 		begin
 		@git.push('origin','master')
-		rescue Git::GitExecuteError => error_git #remote ya creado
+		rescue Git::GitExecuteError => error_git 
 			puts "error en push: "+error_git.to_s
 		end
 		puts "fue push!!"
@@ -140,36 +140,41 @@ class Proyecto
 			
 		end
 		#if(@tree!=nil)
-			@tree = RuboxTree.new(nil,@project_path)
+		#	@tree = RuboxTree.new(nil,@project_path)
 		#else
 		#	@tree.populate()
 		#end
+		return @project_path
 	end
 
-	def addFile(files, path)
-				
+	def addFile(files, newPath = nil)
+		path = (newPath == nil)? @project_path : newPath["path"]		
 		files.each{ |f|
-			FileUtils.cp(f,@project_path+"/"+File.basename(f))	
-			f.replace(@project_path+"/"+File.basename(f))
+			FileUtils.cp(f, path+"/"+File.basename(f))	
 		}
-		puts "ejem: "+files.to_s
-		@tree.addFile(files, path)	
 	end
 
-	def addFolder(folder, path)
-		FileUtils.cp_r(folder,@project_path+"/"+File.basename(folder))
-		@tree.addFolder(@project_path+"/"+File.basename(folder))
+	def addFolder(folder, newPath = nil)
+		path = (newPath == nil)? @project_path : newPath["path"]
+		FileUtils.cp_r(folder, path+"/"+File.basename(folder))
 	end
 
-	def remove()
-		rm_path = @tree.removeSelectedItem()
+	def prepareAddFiles(files, path)
+		@prepareFiles = Array.new()
+		files.each{ |f|
+			newPath = @project_path+"/"+File.basename(f)
+			@prepareFiles.push({ "path" => f, "repetido" => File.exists?(newPath), "reemplazar" => false, "newPath" => newPath })
+		}
+		return @prepareFiles
+	end
+
+
+	def remove(rm_path)
 		# ver si hacer el git remove aca o dejarlo antes del sync como esta ahora
-		if (rm_path!=nil)
-			if(File.ftype(rm_path) == 'directory')
-				FileUtils.remove_dir(rm_path)
-			else
-				FileUtils.remove_file(rm_path)
-			end
+		if(File.ftype(rm_path) == 'directory')
+			FileUtils.remove_dir(rm_path)
+		else
+			FileUtils.remove_file(rm_path)
 		end
 	end
 	
@@ -211,9 +216,9 @@ class Proyecto
 				puts error_git.to_s
 			end
 		end	
-		pull()
+		pull(commit_message)
 		push()
-		@tree.refresh()
+		#@tree.refresh()
 	end
 
 	def download(commit_message)
@@ -229,8 +234,8 @@ class Proyecto
 				puts error_git.to_s
 			end
 		end		
-		pull()
-		@tree.refresh()
+		pull(commit_message)
+		#@tree.refresh()
 	end
 
 	def refresh_old()
@@ -255,7 +260,7 @@ class Proyecto
 		@git.checkout_file(sha,path)
 		FileUtils.cp(path,newFileName)
 		@git.checkout_file("HEAD",path)
-		@tree.addFile([newFileName], nil)
+		#@tree.addFile([newFileName], nil)
 	end
 
 
