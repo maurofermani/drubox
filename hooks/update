@@ -33,10 +33,18 @@ require "/home/fermani/workspace/rubox/config/environment"
 
 output = 0
 begin
-  $stdout.reopen("/var/cache/git/mauro.git/log/out.txt", "a")
-  $stderr.reopen("/var/cache/git/mauro.git/log/out.txt", "a")
+  
+  #$pwd = `pwd`.to_s
+
+  #$stdout.reopen(pwd.to_s + "/log/out.txt", "a")
+  #$stdout.reopen(pwd.to_s + "/log/out.txt", "a")
+  #$stdout.reopen("/var/cache/git/mauro.git/log/out.txt", "a")
+  #$stderr.reopen("/var/cache/git/mauro.git/log/err.txt", "a")
+  $stdout.reopen("./log/out.txt", "a")
+  $stderr.reopen("./log/err.txt", "a")
 
   puts "-------------------------------------------------\n"
+  
   puts "[" + Time.new.to_s + "]\n"
   #autor del commit
   author = `git log --pretty='%an' -n 1`
@@ -48,7 +56,10 @@ begin
   user = User.where("login='" + login + "'").first
 
   #puts File.basename(`pwd`,".git")
-  pName = File.basename("/var/cache/git/mauro.git",".git")
+  #pName = File.basename(pwd.to_s,".git")
+  #pName = File.basename("/var/cache/git/mauro.git",".git")
+  path = Dir.pwd
+  pName = File.basename(path,".git")
   project = Project.where("name = '" + pName.to_s + "'").first
 
   if (user == nil || project == nil)
@@ -65,7 +76,7 @@ begin
   end
 
 rescue Exception => e
-  puts 1
+  output = 1
   #some error occur, dir not writable etc.
 ensure
 #  file.close unless file == nil
