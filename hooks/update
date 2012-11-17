@@ -1,0 +1,82 @@
+#!/usr/local/rvm/rubies/ruby-1.9.3-p194/bin/ruby
+#
+# An example hook script to blocks unannotated tags from entering.
+# Called by "git receive-pack" with arguments: refname sha1-old sha1-new
+#
+# To enable this hook, rename this file to "update".
+#
+# Config
+# ------
+# hooks.allowunannotated
+#   This boolean sets whether unannotated tags will be allowed into the
+#   repository.  By default they won't be.
+# hooks.allowdeletetag
+#   This boolean sets whether deleting tags will be allowed in the
+#   repository.  By default they won't be.
+# hooks.allowmodifytag
+#   This boolean sets whether a tag may be modified after creation. By default
+#   it won't be.
+# hooks.allowdeletebranch
+#   This boolean sets whether deleting branches will be allowed in the
+#   repository.  By default they won't be.
+# hooks.denycreatebranch
+#   This boolean sets whether remotely creating branches will be denied
+#   in the repository.  By default this is allowed.
+#
+
+# --- Command line
+refname=$1
+oldrev=$2
+newrev=$3
+#incluyo el ambiente de rails de Rubox para consultas a la base de datos
+require "/home/fermani/workspace/rubox/config/environment"
+
+#puts "Actualizando repo..." 
+
+
+
+begin
+  $stdout.reopen("/var/cache/git/mauro.git/log/out.txt", "a")
+  $stderr.reopen("/var/cache/git/mauro.git/log/out.txt", "a")
+
+  puts "-------------------------------------------------\n"
+  puts "[" + Time.new.to_s + "]\n"
+  #autor del commit
+  author = `git log --pretty='%an' -n 1`
+  #lo escribo en el log
+  puts "Author: " + author.to_s
+  #obtengo el login. Formato: [<login>] <name>
+  login = author[/\[(.*)\]/][1]
+  #Obtengo el usuario de la base de datos
+  user = User.where("login='" + login + "'").first
+
+  #puts File.basename(`pwd`,".git")
+  pName = File.basename("/var/cache/git/mauro.git",".git")
+  project = Project.where("name = '" + pName.to_s + "'").first
+
+  if (user == nil || project == nil)
+    puts "Error de validacion de usuario y proyecto"
+    puts 1
+  else 
+    pers = Permission.where("user_id = " + user.id.to_s + " and project_id = " + project.id.to_s).first
+    if (pers == nil || pers.type.description == "read") 
+      puts "Error. El usuario no tiene permisos"
+      puts 1
+    else 
+      puts "Cambios aceptados"
+      puts 0
+    end
+  end
+
+rescue Exception => e
+  puts 1
+  #some error occur, dir not writable etc.
+ensure
+#  file.close unless file == nil
+end
+
+
+
+
+
+
