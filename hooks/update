@@ -25,16 +25,13 @@
 #
 
 # --- Command line
-refname=$1
-oldrev=$2
-newrev=$3
+#refname=$1
+#oldrev=$2
+#newrev=$3
 #incluyo el ambiente de rails de Rubox para consultas a la base de datos
 require "/home/fermani/workspace/rubox/config/environment"
 
-#puts "Actualizando repo..." 
-
-
-
+output = 0
 begin
   $stdout.reopen("/var/cache/git/mauro.git/log/out.txt", "a")
   $stderr.reopen("/var/cache/git/mauro.git/log/out.txt", "a")
@@ -56,15 +53,14 @@ begin
 
   if (user == nil || project == nil)
     puts "Error de validacion de usuario y proyecto"
-    puts 1
+    output = 1
   else 
     pers = Permission.where("user_id = " + user.id.to_s + " and project_id = " + project.id.to_s).first
     if (pers == nil || pers.type.description == "read") 
       puts "Error. El usuario no tiene permisos"
-      puts 1
+      output = 1
     else 
       puts "Cambios aceptados"
-      puts 0
     end
   end
 
@@ -76,7 +72,4 @@ ensure
 end
 
 
-
-
-
-
+exit(output)
