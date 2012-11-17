@@ -1,5 +1,6 @@
 require './server.rb'
 require './proyecto.rb'
+require './truecryptInterface.rb'
 
 class Usuario
 
@@ -17,15 +18,17 @@ class Usuario
 	def iniciarSesion(login,password)
 		@cookie =Server::iniciarSesion(login,password)
 		@login = login
-		#if (@cookie !=nil)
-		#	if(File.directory?())
-		#end
-		puts "cookie: "+@cookie if(@cookie!=nil)
+		if (@cookie !=nil)
+			TruecryptInterface::initDirs()
+			TruecryptInterface::createVolume(@login, password, 10485760)
+			TruecryptInterface::mountVolume(@login, password)
+		end
 		return @cookie != nil
 	end
 
 	def cerrarSesion()
 		Server::cerrarSesion(@cookie)
+		TruecryptInterface::unmountVolume(@login)
 	end
 
 	def cargarProyectos()
