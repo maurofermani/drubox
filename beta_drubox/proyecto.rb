@@ -2,9 +2,12 @@ require 'git'
 
 class Proyecto
 	
-	PROJECT_FOLDER = "drubox_files"
-	PROJECTS_PATH = File.expand_path("../../..",$0)+"/"+PROJECT_FOLDER
+	#PROJECT_FOLDER = "drubox_files"
+	#PROJECTS_PATH = File.expand_path("../../..",$0)+"/"+PROJECT_FOLDER
 	SERVER_PROJECTS_PATH = "/var/cache/git"
+
+	DRUBOX_FOLDER = ENV["HOME"]+"/.drubox" # /home/usuario/.drubox
+	
 
 	attr_reader :id, :nombre, :descripcion, :tree
 
@@ -13,13 +16,14 @@ class Proyecto
 		@nombre = nombre
 		@descripcion = descripcion
 		@carpeta = @nombre#.gsub(/ /,'')+"_id"+@id.to_s
-		@tree = nil
 		@username = username
+
+		@user_projects_path = DRUBOX_FOLDER+"/"+@username # /home/usuario/.drubox/login	
 		
-		@user_projects_path = PROJECTS_PATH+"_"+@username #path de proyectos del usuario
-		@project_path = @user_projects_path+"/"+@carpeta #path del proyecto
+		@project_path = @user_projects_path+"/"+@carpeta # /home/usuario/.drubox/login/proyecto
+			
 		@server_project_path = SERVER_PROJECTS_PATH+"/"+@carpeta
-	end
+	end	
 
 	def pull(commit_message)
 
@@ -104,9 +108,12 @@ class Proyecto
 
 	def abrirProyecto()
 
-		if(!File.directory?(@user_projects_path))
-			Dir.mkdir(@user_projects_path)
-		end
+		#montar volumen TC en punto de montaje
+		#seguir con logica anterior...
+		
+		#if(!File.directory?(@user_projects_path))
+		#	Dir.mkdir(@user_projects_path)
+		#end
 
 		if(File.directory?(@project_path))
 			if(File.directory?(@project_path+"/.git"))
@@ -218,7 +225,6 @@ class Proyecto
 		end	
 		pull(commit_message)
 		push()
-		#@tree.refresh()
 	end
 
 	def download(commit_message)
@@ -235,7 +241,6 @@ class Proyecto
 			end
 		end		
 		pull(commit_message)
-		#@tree.refresh()
 	end
 
 	def refresh_old()
@@ -260,7 +265,6 @@ class Proyecto
 		@git.checkout_file(sha,path)
 		FileUtils.cp(path,newFileName)
 		@git.checkout_file("HEAD",path)
-		#@tree.addFile([newFileName], nil)
 	end
 
 
