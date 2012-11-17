@@ -6,7 +6,7 @@ require './usuario.rb'
 
 class DRuboxWindow < Qt::MainWindow
 
-	slots 'login()', 'projectSelected(int)','addFile()','addFolder()','remove()','upload()','download()','timeMachine()','logout()'
+	slots 'login()', 'projectSelected(int)','addFile()','addFolder()','remove()','upload()','download()','timeMachine()','logout()','quitDrubox()'
 
 	def initialize(parent = nil)
 		super(parent)		
@@ -19,6 +19,7 @@ class DRuboxWindow < Qt::MainWindow
 		setWindowTitle("Rubox Desktop Application")
 
 		@usuario = nil
+		@currentIndex = 0
 		
 		resize(800,400)
 		move(300,300)
@@ -38,7 +39,7 @@ class DRuboxWindow < Qt::MainWindow
 		@salirAction = Qt::Action.new(tr("&Salir"),self)
 		@salirAction.setIcon(Qt::Icon.new('./images/ic32.png'))
 		@salirAction.setStatusTip(tr("Salir de la aplicacion"))
-		connect(@salirAction,SIGNAL('triggered()'),self,SLOT('close()'))
+		connect(@salirAction,SIGNAL('triggered()'),self,SLOT('quitDrubox()'))
 
 		@addFileAction = Qt::Action.new(tr("Agregar &Archivo"),self)
 		@addFileAction.setIcon(Qt::Icon.new('./images/File.png'))
@@ -162,8 +163,14 @@ class DRuboxWindow < Qt::MainWindow
 		enableActions(false)
 	end
 
+	def quitDrubox()
+		logout()
+		close()
+	end
+
 	def projectSelected(index)
-		if (index>0)		
+		if (index>0) and (index!=@currentIndex)
+			@currentIndex = index		
 			projectPath = @usuario.setCurrentProject(index-1)
 			@tree = RuboxTree.new(nil,projectPath)
 			setCentralWidget(@tree)
