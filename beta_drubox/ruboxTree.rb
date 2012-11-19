@@ -101,8 +101,8 @@ class RuboxTree < Qt::TreeWidget
 
 	def removeSelectedItem()
 		item = selectedItems()
-		if (!item.empty?)		
-			path = item[0].text(3)+item[0].text(0) 
+		if (!item.empty?) and (File.exists?(path = item[0].text(3)+item[0].text(0)))
+			#path = item[0].text(3)+item[0].text(0) 
 			if (File.ftype(path) == 'directory')
 				msg = "Desea eliminar el directorio #{item[0].text(0)}? (Se eliminara tambien su contenido)"
 			else
@@ -127,7 +127,7 @@ class RuboxTree < Qt::TreeWidget
 		path = nil
 		if (!item.empty?)		
 			path = item[0].text(3)+item[0].text(0)
-			if(File.ftype(path) != 'file')
+			if(!File.exists?(path)) or (File.ftype(path) != 'file')
 				path = nil
 			end
 		end
@@ -137,9 +137,9 @@ class RuboxTree < Qt::TreeWidget
 	def getSelectedFolder()
 		item = selectedItems()
 		folder = nil
-		if (!item.empty?)		
+		if (!item.empty?) 	
 			path = item[0].text(3)+item[0].text(0)
-			if(File.ftype(path) == 'directory')
+			if(File.exists?(path)) and (File.ftype(path) == 'directory')
 				folder = {"path" => path, "item" => item[0]}
 			end
 		end
@@ -150,4 +150,94 @@ class RuboxTree < Qt::TreeWidget
 		clear()
 		populate(self,@path)
 	end
+
+	def updateStatusIcons(files, iconPath, statusText)
+		files.each{ |f,s|
+			filePath = @path+"/"+s.path.to_s
+			puts "filepath: "+filePath
+			fileName = File.basename(filePath)
+			puts "filename: "+fileName
+			items = findItems(fileName, Qt::MatchCaseSensitive|Qt::MatchRecursive,0)
+			items.each{ |i|
+				puts "1: "+filePath
+				puts "2: "+i.text(3)+i.text(0)
+				if(i.text(3)+i.text(0)==filePath)
+					i.setText(4, statusText)
+					i.setIcon(4, Qt::Icon.new(iconPath))		
+				end
+			}	
+		}
+	end
+
+	def updateStatusIconsDeleted(files, iconPath, statusText)
+		files.each{ |f,s|
+			
+			filePath = @path+"/"+s.path.to_s
+			puts "filepath: "+filePath
+			fileName = File.basename(filePath)
+			puts "filename: "+fileName
+			items = findItems(fileName, Qt::MatchCaseSensitive|Qt::MatchRecursive,0)
+			
+			if (items.length()==0)
+				
+				splitPath = s.path.split("/")
+				parent = nil
+				parent_path =  @path
+				for i in 0..splitPath.length-2
+					f = findItems(splitPath[i], Qt::MatchCaseSensitive|Qt::MatchRecursive,0)
+					parent_path = parent_path+"/"+splitPath[i] 
+					if(f.length==0)
+						folder_item = Qt::TreeWidgetItem.new()
+						folder_item.setText(0, splitPath[i])
+						folder_item.setIcon(0, Qt::Icon.new(FOLDER_ICON_PATH))
+						folder_item.setText(3, parent_path.chomp(splitPath[i]))
+
+						if (parent==nil)
+							addTopLevelItem(folder_item)
+							
+						else
+							parent.insertChild(parent.childCount, folder_item)
+						end	
+						parent = folder_item
+					else
+						f.each{ |fol|
+							parent = fol if(fol.text(3)+fol.text(0)==parent_path)	
+						}						
+					end
+				end
+				item = Qt::TreeWidgetItem.new()
+				item.setText(0, splitPath[splitPath.length-1])
+				item.setIcon(0, Qt::Icon.new(FILE_ICON_PATH))				
+				item.setText(3, parent_path+"/")
+				item.setText(4, statusText)
+				item.setIcon(4, Qt::Icon.new(iconPath))
+				if(parent==nil)
+					addTopLevelItem(item)
+				else
+					parent.insertChild(parent.childCount,item)	
+				end
+			else
+				items.each{ |it|
+					puts "1: "+filePath
+					puts "2: "+it.text(3)+it.text(0)
+					if(it.text(3)+it.text(0)==filePath)
+						it.setText(4, statusText)
+						it.setIcon(4, Qt::Icon.new(iconPath))		
+					end
+				}
+			end	
+		}
+	end
+
+	def updateStatus(status)
+		puts "updateStatus"
+		puts status.added.class.to_s
+		puts status.added.to_s
+		updateStatusIcons(status.untracked, "./images/status_added.png", "Untracked")
+		updateStatusIcons(status.changed, "./images/status_changed.png", "Changed")
+		updateStatusIcons(status.added, "./images/status_added.png", "Added")
+		updateStatusIconsDeleted(status.deleted, "./images/status_deleted.png", "Deleted")
+	end
+
+
 end

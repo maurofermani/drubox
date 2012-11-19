@@ -186,8 +186,14 @@ class Proyecto
 	end
 	
 	def status()
-		#puts @git.status.pretty
-		#sync()
+		#@git.status.each{ |s|
+		#	puts "path: "+s.path.to_s
+		#	puts "type: "+s.type.to_s
+		#	puts "stage: "+s.stage.to_s
+		#	puts "untracked: "+s.untracked.to_s
+		#	puts "------------------"
+		#}
+		@git.status
 	end
 
 

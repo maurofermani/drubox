@@ -6,7 +6,7 @@ require './usuario.rb'
 
 class DRuboxWindow < Qt::MainWindow
 
-	slots 'login()', 'projectSelected(int)','addFile()','addFolder()','remove()','upload()','download()','timeMachine()','logout()','quitDrubox()'
+	slots 'login()', 'projectSelected(int)','addFile()','addFolder()','remove()','upload()','download()','timeMachine()','logout()','quitDrubox()','getStatus()'
 
 	def initialize(parent = nil)
 		super(parent)		
@@ -70,7 +70,12 @@ class DRuboxWindow < Qt::MainWindow
 		@timeMachineAction.setIcon(Qt::Icon.new('./images/TimeMachine.png'))
 		@timeMachineAction.setStatusTip(tr("Obtener versiones pasadas de los archivos..."))
 		connect(@timeMachineAction,SIGNAL('triggered()'),self,SLOT('timeMachine()'))
-		
+
+		@statusAction = Qt::Action.new(tr("&Status"),self)
+		@statusAction.setIcon(Qt::Icon.new('./images/status.png'))
+		@statusAction.setStatusTip(tr("Obtener status de los archivos..."))
+		connect(@statusAction,SIGNAL('triggered()'),self,SLOT('getStatus()'))		
+
 		enableActions(false)
 	end
 
@@ -106,6 +111,7 @@ class DRuboxWindow < Qt::MainWindow
 		@ruboxToolBar.addAction(@uploadAction)
 		@ruboxToolBar.addAction(@downAction)
 		@ruboxToolBar.addAction(@timeMachineAction)
+		@ruboxToolBar.addAction(@statusAction)
 	end
 
 	def createStatusBar()
@@ -122,6 +128,7 @@ class DRuboxWindow < Qt::MainWindow
 		@uploadAction.setEnabled(enable)
 		@downAction.setEnabled(enable)
 		@timeMachineAction.setEnabled(enable)
+		@statusAction.setEnabled(enable)
 	end
 
 	def login()
@@ -229,6 +236,10 @@ class DRuboxWindow < Qt::MainWindow
 			end
 		end
 		
+	end
+
+	def getStatus()
+		@tree.updateStatus(@proyecto.status())
 	end
 
 end #class
