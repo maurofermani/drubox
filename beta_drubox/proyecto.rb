@@ -22,7 +22,8 @@ class Proyecto
 		
 		@project_path = @user_projects_path+"/"+@carpeta # /home/usuario/.drubox/login/proyecto
 			
-		@server_project_path = SERVER_PROJECTS_PATH+"/"+@carpeta
+		#@server_project_path = SERVER_PROJECTS_PATH+"/"+@carpeta
+		@server_project_path = "git://127.0.0.1/"+@carpeta
 	end	
 
 	def pull(commit_message)
