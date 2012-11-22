@@ -118,17 +118,23 @@ class DRuboxWindow < Qt::MainWindow
 		statusBar()
 	end
 
-	def enableActions(enable)
+	def enableActions(enable, accessType = 3)
 		#@iniciarSesionAction
 		#@cerrarSesionAction
 		#@salirAction
 		@addFileAction.setEnabled(enable)
 		@addFolderAction.setEnabled(enable)
 		@removeAction.setEnabled(enable)
-		@uploadAction.setEnabled(enable)
+		
 		@downAction.setEnabled(enable)
 		@timeMachineAction.setEnabled(enable)
 		@statusAction.setEnabled(enable)
+		
+		if enable and (accessType.to_i==1 or accessType.to_i==2) 
+			@uploadAction.setEnabled(enable)
+		else
+			@uploadAction.setEnabled(false)
+		end
 	end
 
 	def login()
@@ -167,6 +173,7 @@ class DRuboxWindow < Qt::MainWindow
 		@tree.clear() if(@tree != nil)
 		@tree = nil
 		@projectCombo.clear() if(@projectCombo != nil)
+		@currentIndex = 0
 		enableActions(false)
 	end
 
@@ -182,7 +189,7 @@ class DRuboxWindow < Qt::MainWindow
 			@tree = RuboxTree.new(nil,projectPath)
 			setCentralWidget(@tree)
 			@proyecto = @usuario.getCurrentProject()
-			enableActions(true)
+			enableActions(true, @proyecto.accessType())
 		end
 	end
 
@@ -212,13 +219,13 @@ class DRuboxWindow < Qt::MainWindow
 	end
 
 	def upload()
-		cm = Qt::InputDialog::getText(self,tr("Ingrese commmit message"),tr("Commit Message"),Qt::LineEdit::Normal, "", @ok)
+		cm = Qt::InputDialog::getText(self,tr("Mensaje"),tr("Commit Message"),Qt::LineEdit::Normal, "", @ok)
 		@proyecto.upload(cm)
 		@tree.refresh()
 	end
 
 	def download()
-		cm = Qt::InputDialog::getText(self,tr("Ingrese commmit message"),tr("Commit Message"),Qt::LineEdit::Normal, "", @ok)
+		cm = Qt::InputDialog::getText(self,tr("Mensaje"),tr("Commit Message"),Qt::LineEdit::Normal, "", @ok)
 		@proyecto.download(cm)
 		@tree.refresh()
 	end
@@ -232,22 +239,30 @@ class DRuboxWindow < Qt::MainWindow
 			if(timeMachineDialog.exec()==Qt::Dialog::Accepted)
 				newFileName = timeMachineDialog.getNewFileName()				
 				@proyecto.recuperarArchivo(path, newFileName , timeMachineDialog.getSelectedSha())
-				@tree.addFile([newFileName], nil)
+				#@tree.addFile([newFileName], nil)
+				@tree.refresh()
 			end
 		end
 		
 	end
 
 	def getStatus()
-		@tree.updateStatus(@proyecto.status())
+		status = @proyecto.status()
+		@tree.updateStatus(status) if(status!=nil)
 	end
 
 end #class
 
+begin
 app = Qt::Application.new(ARGV)
 #Qt::Application::setStyle("motif")
 window = DRuboxWindow.new()
 window.show()
 app.exec()
+rescue Exception => e
+	puts e.to_s
+ensure
+	puts "Salida de ensure"
+end
 
 

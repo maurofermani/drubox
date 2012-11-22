@@ -9,14 +9,15 @@ class Proyecto
 	DRUBOX_FOLDER = ENV["HOME"]+"/.drubox" # /home/usuario/.drubox
 	
 
-	attr_reader :id, :nombre, :descripcion, :tree
+	attr_reader :id, :nombre, :descripcion, :accessType
 
-	def initialize(id, nombre, descripcion, username)
+	def initialize(id, nombre, descripcion, username, accessType)
 		@id = id
 		@nombre = nombre
 		@descripcion = descripcion
 		@carpeta = @nombre#.gsub(/ /,'')+"_id"+@id.to_s
 		@username = username
+		@accessType = accessType #1 owner, 2 write, 3 read
 
 		@user_projects_path = DRUBOX_FOLDER+"/"+@username # /home/usuario/.drubox/login	
 		
@@ -31,7 +32,7 @@ class Proyecto
 		begin
 			@git.fetch('origin')
 		rescue Git::GitExecuteError => error_git #no se hizo el 1er commit
-			puts "no hay 1er commit\n"+error_git
+			puts "no hay 1er commit\n"+error_git.to_s
 		else #1er commit ok :)
 			begin	
 				@git.merge("origin/master","-m #{commit_message}: merge")
@@ -194,7 +195,12 @@ class Proyecto
 		#	puts "untracked: "+s.untracked.to_s
 		#	puts "------------------"
 		#}
-		@git.status
+		begin		
+			@git.status
+		rescue Git::GitExecuteError => error_git 
+			puts "error git status: "+error_git.to_s
+			return nil
+		end
 	end
 
 

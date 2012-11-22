@@ -37,7 +37,7 @@ class Usuario
 		proys.each { |p_id|
 			#@proyectos.push(p['path'])
 			p_info = Server::infoProyecto(@cookie, p_id['project_id'])
-			@projects.push( Proyecto.new(p_info['id'], p_info['name'], p_info['description'], @login) )
+			@projects.push( Proyecto.new(p_info['id'], p_info['name'], p_info['description'], @login, p_id['type_id']) )
 		}
 		getProjectName()
 	end

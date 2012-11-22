@@ -93,7 +93,8 @@ class TimeMachineDialog < Qt::Dialog
 	end
 
 	def getNewFileName()
-		return @newFileName
+		#return @newFileName
+		return @recLineEdit.text()
 	end
 
 	def getSelectedSha()

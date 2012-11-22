@@ -13,9 +13,19 @@ class TruecryptInterface
 		cryptVol = DRUBOX_FOLDER+"/.hd/"+login+".ci"
 		pwVol = pw
 		sizeVol = size #esto pedirlo al usuario
-		randomFileVol = "/home/p4c/Escritorio/rrr/random.txt" #esto cambiarlo, generar el archivo en el momento y ver si despues se puede borrar
+		randomFileVol = "/tmp/random.txt" #esto cambiarlo, generar el archivo en el momento y ver si despues se puede borrar
 		
+		#crea un String aleatorio para generar el archivo para el --random-source de truecrypt
+		randomString = ""
+		320.times{randomString << ( rand(2)==1? ( (rand(2)==1?65:97) + rand(25)) : rand(9) + 48 ).chr}
+		file = File.new(randomFileVol,"w")
+		file.puts(randomString)
+		file.close()
+				
+
 		`echo 5 | truecrypt -t -c #{cryptVol} --volume-type=normal --encryption="AES" --hash="SHA-512" -p="#{pwVol}" -k "" --random-source=#{randomFileVol} --size="#{sizeVol}"` if(!File.exists?(cryptVol))
+	
+		File.delete(randomFileVol) if (File.exists?(randomFileVol))
 	end
 
 	def self.mountVolume(login, pw)
