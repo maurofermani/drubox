@@ -69,14 +69,29 @@ rake db:seed
 +######################################################+
 
 +------------------------------------------------------+
-|Instalacion de truecrypt                              |
+|Instalacion de truecrypt, como root                   |
 +------------------------------------------------------+
+--Descarga del tar desde http://www.truecrypt.org/downloads
+tar -zxvf truecrypt-7.1a-linux-console-x86.tar.gz
+./truecrypt-7.1a-setup-console-x86
++------------------------------------------------------+
+|Montar volumenes con usuario normal, como root        |
++------------------------------------------------------+
+groupadd truecrypt
+visudo
+-- Agregar al Final --
+# Users in the truecrypt group are allowed to run TrueCrypt as root.
+%truecrypt ALL=(root) NOPASSWD:/usr/bin/truecrypt
+-- Agrego los usuarios normales al grupo --
+gpasswd -a USER_1 truecrypt
 
 +------------------------------------------------------+
 |Instalacion de Qt                                     |
 +------------------------------------------------------+
+yum install qt qt-demos qt-designer qt4 qt4-designer cmake
+gem install qtbindings
 
 +------------------------------------------------------+
 |Instalacion de gema Git                               |
 +------------------------------------------------------+
-
+gem install git
