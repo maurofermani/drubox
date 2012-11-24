@@ -1,6 +1,6 @@
 class TruecryptInterface
 
-	DRUBOX_FOLDER = ENV["HOME"]+"/.drubox" # /home/usuario/.drubox
+	DRUBOX_FOLDER = ENV["HOME"]+ENV['drubox_folder']  # /home/usuario/Rubox
 
 	def self.initDirs()
 		#setupTC

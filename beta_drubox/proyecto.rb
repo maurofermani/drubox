@@ -4,9 +4,8 @@ class Proyecto
 	
 	#PROJECT_FOLDER = "drubox_files"
 	#PROJECTS_PATH = File.expand_path("../../..",$0)+"/"+PROJECT_FOLDER
-	SERVER_PROJECTS_PATH = "/var/cache/git"
 
-	DRUBOX_FOLDER = ENV["HOME"]+"/.drubox" # /home/usuario/.drubox
+	DRUBOX_FOLDER = ENV["HOME"]+ ENV['drubox_folder'] # /home/usuario/Rubox
 	
 
 	attr_reader :id, :nombre, :descripcion, :accessType
@@ -23,8 +22,7 @@ class Proyecto
 		
 		@project_path = @user_projects_path+"/"+@carpeta # /home/usuario/.drubox/login/proyecto
 			
-		#@server_project_path = SERVER_PROJECTS_PATH+"/"+@carpeta
-		@server_project_path = "git://127.0.0.1/"+@carpeta
+		@server_project_path = "git://#{ENV['server_host']}/"+@carpeta
 	end	
 
 	def pull()

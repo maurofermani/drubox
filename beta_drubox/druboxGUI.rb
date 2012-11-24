@@ -1,4 +1,5 @@
 require 'Qt4'
+require 'yaml'
 require './ruboxTree.rb'
 require './loginDialog.rb'
 require './timeMachineDialog.rb'
@@ -7,6 +8,7 @@ require './usuario.rb'
 require './exceptions/openProjectException.rb'
 require './exceptions/uploadException.rb'
 require './exceptions/downloadException.rb'
+
 
 class DRuboxWindow < Qt::MainWindow
 
@@ -313,7 +315,15 @@ class DRuboxWindow < Qt::MainWindow
 end #class
 
 begin
+
 Qt::TextCodec::setCodecForCStrings(Qt::TextCodec::codecForName("utf-8"))
+
+#Cargo las propiedades del sistema
+yml = YAML::load(File.open('config/environment.yml'))
+yml.each_pair { |key, value|
+  ENV[key] = value.to_s
+}
+
 app = Qt::Application.new(ARGV)
 #Qt::Application::setStyle("motif")
 window = DRuboxWindow.new()

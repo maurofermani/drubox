@@ -1,0 +1,97 @@
+
++######################################################+
+|########### Instalacion de GIT #######################|
++######################################################+
+yum install curl-devel expat-devel gettext-devel openssl-devel zlib-devel
+
+
++######################################################+
+|########### Instalacion de RVM #######################|
++######################################################+
+
++------------------------------------------------------+
+|Instalacion de ruby                                   |
++------------------------------------------------------+
+\curl -L https://get.rvm.io | bash -s stable --ruby
+
++------------------------------------------------------+
+|RVM Requeriments                                      |
++------------------------------------------------------+
+rvm requirements
+yum install -y gcc-c++ patch readline readline-devel zlib zlib-devel libyaml-devel libffi-devel openssl-devel make bzip2 autoconf automake libtool bison iconv-devel curl
+
++------------------------------------------------------+
+|Instalamos sqlite y mysql                             |
++------------------------------------------------------+
+yum install sqlite sqlite-devel
+yum install mysql mysql-server libmysql-ruby libmysqlclient-dev mysql-devel
+chkconfig --level 2345 mysqld on
+
++------------------------------------------------------+
+|Reinstalamos ruby                                     |
++------------------------------------------------------+
+rvm reinstall 1.9.3
+
++------------------------------------------------------+
+|Instalamos Rails con RVM                              |
++------------------------------------------------------+
+\curl -L https://get.rvm.io | bash -s stable --rails
+
+
++######################################################+
+|###############INSTALACION DE RUBOX###################|
++######################################################+
+
++------------------------------------------------------+
+|Descargar de Rubox desde Github                       |
++------------------------------------------------------+
+mkdir ~/workspace
+cd ~/workspace
+git clone https://github.com/maurofermani/Rubox.git
+cd Rubox
+
++------------------------------------------------------+
+|Insatalacion de gemas adicionales                     |
++------------------------------------------------------+
+bundle config build.mysql2 --with-mysql-config='/usr/bin/mysql_config'
+bundle install
+
++------------------------------------------------------+
+|Creamos la base de datos y ejecutamos las migraciones |
++------------------------------------------------------+
+rake db:create
+rake db:migrate
+rake db:seed
+
+
++######################################################+
+|############ INSTALACION DE DRUBOX ###################|
++######################################################+
+
++------------------------------------------------------+
+|Instalacion de truecrypt, como root                   |
++------------------------------------------------------+
+--Descarga del tar desde http://www.truecrypt.org/downloads
+tar -zxvf truecrypt-7.1a-linux-console-x86.tar.gz
+./truecrypt-7.1a-setup-console-x86
++------------------------------------------------------+
+|Montar volumenes con usuario normal, como root        |
++------------------------------------------------------+
+groupadd truecrypt
+visudo
+-- Agregar al Final --
+# Users in the truecrypt group are allowed to run TrueCrypt as root.
+%truecrypt ALL=(root) NOPASSWD:/usr/bin/truecrypt
+-- Agrego los usuarios normales al grupo --
+gpasswd -a USER_1 truecrypt
+
++------------------------------------------------------+
+|Instalacion de Qt                                     |
++------------------------------------------------------+
+yum install qt qt-demos qt-designer qt4 qt4-designer cmake
+gem install qtbindings
+
++------------------------------------------------------+
+|Instalacion de gema Git                               |
++------------------------------------------------------+
+gem install git

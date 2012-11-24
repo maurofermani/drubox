@@ -1,0 +1,8 @@
+
+#server
+server_host: 127.0.0.1
+server_port: 3000
+
+#client
+drubox_folder: Rubox
+log_file: .client.log
