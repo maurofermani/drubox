@@ -4,9 +4,8 @@ class Proyecto
 	
 	#PROJECT_FOLDER = "drubox_files"
 	#PROJECTS_PATH = File.expand_path("../../..",$0)+"/"+PROJECT_FOLDER
-	SERVER_PROJECTS_PATH = "/var/cache/git"
 
-	DRUBOX_FOLDER = ENV["HOME"]+"/.drubox" # /home/usuario/.drubox
+	DRUBOX_FOLDER = ENV["HOME"]+ ENV['drubox_folder'] # /home/usuario/Rubox
 	
 
 	attr_reader :id, :nombre, :descripcion, :accessType
@@ -23,8 +22,7 @@ class Proyecto
 		
 		@project_path = @user_projects_path+"/"+@carpeta # /home/usuario/.drubox/login/proyecto
 			
-		#@server_project_path = SERVER_PROJECTS_PATH+"/"+@carpeta
-		@server_project_path = "git://127.0.0.1/"+@carpeta
+		@server_project_path = "git://#{ENV['server_host']}/"+@carpeta
 	end	
 
 	def pull(commit_message)
@@ -142,7 +140,6 @@ class Proyecto
 			#Dir.mkdir(PROJECTS_PATH+"/"+@carpeta)
 			#@git = Git.init(PROJECTS_PATH+"/"+@carpeta)
 			#puts "ssh://localhost/var/cache/git/Mi\\ proyecto"
-			#@git.add_remote('server',SERVER_PROJECTS_PATH+"/"+@carpeta)
 			#@git.pull("server","server/master","Pull de server a "+@carpeta)
 			@git = Git.clone(@server_project_path,@carpeta,{:path => @user_projects_path})	
 
