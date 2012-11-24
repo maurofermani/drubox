@@ -1,11 +1,11 @@
 require "uri"
 require 'net/http'
 require 'json'
+require './config/yml.rb'
 
 class Server
 
-	#@@http = Net::HTTP.new(ENV['server_host'], ENV['server_port'].to_i)
-	@@http = Net::HTTP.new("127.0.0.1", 3000)
+	@@http = Net::HTTP.new(YML::get("server_host"), YML::get("server_port").to_i)
 
 	def self.iniciarSesion(login,password)
 		url = "/sessions"

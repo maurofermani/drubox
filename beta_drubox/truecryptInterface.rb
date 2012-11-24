@@ -1,6 +1,8 @@
+require './config/yml.rb'
+
 class TruecryptInterface
 
-	DRUBOX_FOLDER = ENV["HOME"]+"/Rubox"  # /home/usuario/Rubox
+ 	DRUBOX_FOLDER = ENV["HOME"] + "/" + YML::get("drubox_folder")
 
 	def self.initDirs()
 		#setupTC
@@ -37,7 +39,7 @@ class TruecryptInterface
 		mountPoint = DRUBOX_FOLDER+"/"+login
 		Dir.mkdir(mountPoint) if(!File.directory?(mountPoint)) #punto de montaje
 		
-		cryptVol = DRUBOX_FOLDER+"/.hd/"+login+".ci"		
+		cryptVol = DRUBOX_FOLDER+"/.hd/"+login+".ci"
 		pwVol = pw		
 
 		`truecrypt #{cryptVol} #{mountPoint}/ -p "#{pwVol}" -k "" --non-interactive`

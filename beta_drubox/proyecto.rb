@@ -1,12 +1,13 @@
 require 'git'
+require './config/yml.rb'
 
 class Proyecto
 	
 	#PROJECT_FOLDER = "drubox_files"
 	#PROJECTS_PATH = File.expand_path("../../..",$0)+"/"+PROJECT_FOLDER
 
-	
-	DRUBOX_FOLDER = ENV["HOME"]+"/Rubox" # /home/usuario/Rubox
+
+	DRUBOX_FOLDER = ENV["HOME"]+ "/" + YML::get("drubox_folder") # /home/usuario/Rubox
 
 	attr_reader :id, :nombre, :descripcion, :accessType
 
@@ -19,7 +20,7 @@ class Proyecto
 		@username = username
 		@accessType = accessType #1 owner, 2 write, 3 read
 
-		@user_projects_path = DRUBOX_FOLDER+"/"+@username # /home/usuario/.drubox/login	
+		@user_projects_path = DRUBOX_FOLDER+"/"+@username # /home/usuario/.drubox/login
 		
 		@project_path = @user_projects_path+"/"+@carpeta # /home/usuario/.drubox/login/proyecto
 			
