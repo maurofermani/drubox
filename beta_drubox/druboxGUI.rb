@@ -2,7 +2,11 @@ require 'Qt4'
 require './ruboxTree.rb'
 require './loginDialog.rb'
 require './timeMachineDialog.rb'
+require './truecryptOptionsDialog.rb'
 require './usuario.rb'
+require './exceptions/openProjectException.rb'
+require './exceptions/uploadException.rb'
+require './exceptions/downloadException.rb'
 
 class DRuboxWindow < Qt::MainWindow
 
@@ -146,6 +150,20 @@ class DRuboxWindow < Qt::MainWindow
 				@usuario = Usuario.new()
 				if (@usuario.iniciarSesion(u,p))
 					puts "Iniciada"
+
+					#metodo de consulta en la calse usuario para saber si existe el dir de trabajo
+					#consultar, y si no existe, preguntar tamaño y usar metodo para crearlo
+
+					if(!@usuario.tieneWorkspace?())
+						#leer tamaño	
+						truecryptOptions = TruecryptOptionsDialog.new(self)	
+						truecryptOptions.exec()
+						size = truecryptOptions.getSize()
+						puts "size: "+size.to_s
+						@usuario.crearWorkspace(size)
+					end
+					@usuario.montarWorkspace()
+
 					proyectos = @usuario.cargarProyectos()
 								
 					@projectCombo.addItem("Seleccionar...")
@@ -183,51 +201,92 @@ class DRuboxWindow < Qt::MainWindow
 	end
 
 	def projectSelected(index)
-		if (index>0) and (index!=@currentIndex)
-			@currentIndex = index		
-			projectPath = @usuario.setCurrentProject(index-1)
-			@tree = RuboxTree.new(nil,projectPath)
-			setCentralWidget(@tree)
-			@proyecto = @usuario.getCurrentProject()
-			enableActions(true, @proyecto.accessType())
+		begin
+			if (index>0) and (index!=@currentIndex)
+				@currentIndex = index		
+				projectPath = @usuario.setCurrentProject(index-1)
+				@tree = RuboxTree.new(nil,projectPath)
+				setCentralWidget(@tree)
+				@proyecto = @usuario.getCurrentProject()
+				enableActions(true, @proyecto.accessType())
+			end
+		rescue Exception => e
+			#error al abrir el proyecto
+			@tree.clear() if(@tree!=nil)
+			@projectCombo.setCurrentIndex(0) if(@projectCombo!=nil) and (@projectCombo.count()>0)
+			@currentIndex = 0			
+			enableActions(false)
+			Qt::MessageBox::critical(self,tr('DRubox'),tr("Error al abrir el proyecto"))
 		end
 	end
 
 	def addFile()
-		newPath = @tree.getSelectedFolder()		
-		@files = Qt::FileDialog::getOpenFileNames(self,"Seleccione los archivos a agregar","/home")
-		#@proyecto.prepareAddFiles(@files) #listado de archivos repetidos...
-		#preguntar si se reemplazan
-		#reemplazar lo que se reemplaza
-		#pasar cambios a gui tree
-		@proyecto.addFile(@files, newPath)
-		@tree.addFile(@files, newPath)
+		begin		
+			newPath = @tree.getSelectedFolder()		
+			file = Qt::FileDialog::getOpenFileName(self,"Seleccione los archivos a agregar","/home")
+			#@proyecto.prepareAddFiles(@files) #listado de archivos repetidos...
+			#preguntar si se reemplazan
+			#reemplazar lo que se reemplaza
+			#pasar cambios a gui tree
+			added = @proyecto.addFile(file, newPath)
+			if added
+				@tree.addFile(file, newPath)
+			else
+				Qt::MessageBox::warning(self,tr('DRubox'),tr("El archivo no fue agregado porque ya existe"))
+			end
+		rescue Exception => e
+			Qt::MessageBox::critical(self,tr('DRubox'),tr("Error al agregar el archivo"))
+			@tree.refresh() if(@tree!=nil)
+		end
 	end
 
 	def addFolder()
-		newPath = @tree.getSelectedFolder()
-		@folder = Qt::FileDialog::getExistingDirectory(self,"Seleccione las carpetas a agregar","/home",Qt::FileDialog::ShowDirsOnly)
-		if(@folder!=nil)		
-			@proyecto.addFolder(@folder, newPath) 
-			@tree.addFolder(@folder, newPath)
+		begin	
+			newPath = @tree.getSelectedFolder()
+			@folder = Qt::FileDialog::getExistingDirectory(self,"Seleccione las carpetas a agregar","/home",Qt::FileDialog::ShowDirsOnly)
+			if(@folder!=nil)		
+				added = @proyecto.addFolder(@folder, newPath) 
+				if added
+					@tree.addFolder(@folder, newPath)
+				else
+					Qt::MessageBox::warning(self,tr('DRubox'),tr("La carpeta no fue agregada porque ya existe"))
+				end
+			end
+		rescue Exception => e
+			Qt::MessageBox::critical(self,tr('DRubox'),tr("Error al agregar la carpeta"))
+			@tree.refresh() if(@tree!=nil)
 		end
 	end
 
 	def remove()
-		rm_path = @tree.removeSelectedItem()
-		@proyecto.remove(rm_path) if(rm_path!=nil)
+		begin				
+			rm_path = @tree.removeSelectedItem()
+			@proyecto.remove(rm_path) if(rm_path!=nil)
+		rescue Exception => e
+			Qt::MessageBox::critical(self,tr('DRubox'),tr("Error al eliminar el archivo o carpeta"))
+			@tree.refresh() if(@tree!=nil)
+		end
 	end
 
 	def upload()
-		cm = Qt::InputDialog::getText(self,tr("Mensaje"),tr("Commit Message"),Qt::LineEdit::Normal, "", @ok)
-		@proyecto.upload(cm)
+		begin
+		msg = (@proyecto.hayCambios?)? Qt::InputDialog::getText(self,tr("Mensaje"),tr("Commit Message"),Qt::LineEdit::Normal, "", @ok) : ""
+		@proyecto.upload(msg)
 		@tree.refresh()
+		rescue Exception => e
+			Qt::MessageBox::critical(self,tr('DRubox'),tr("Error al subir los cambios al servidor"))	
+		end
 	end
 
 	def download()
-		cm = Qt::InputDialog::getText(self,tr("Mensaje"),tr("Commit Message"),Qt::LineEdit::Normal, "", @ok)
-		@proyecto.download(cm)
+		begin
+		msg = (@proyecto.hayCambios?)? Qt::InputDialog::getText(self,tr("Mensaje"),tr("Commit Message"),Qt::LineEdit::Normal, "", @ok) : ""	
+		@proyecto.download(msg)
 		@tree.refresh()
+		rescue  Exception => e
+			puts e.to_s
+			Qt::MessageBox::critical(self,tr('DRubox'),tr("Error al bajar los cambios desde el servidor"))
+		end
 	end
 
 	def timeMachine()
@@ -254,15 +313,12 @@ class DRuboxWindow < Qt::MainWindow
 end #class
 
 begin
+Qt::TextCodec::setCodecForCStrings(Qt::TextCodec::codecForName("utf-8"))
 app = Qt::Application.new(ARGV)
 #Qt::Application::setStyle("motif")
 window = DRuboxWindow.new()
 window.show()
 app.exec()
-rescue Exception => e
-	puts e.to_s
-ensure
-	puts "Salida de ensure"
 end
 
 

@@ -1,0 +1,3 @@
+class CleanProjectException < Exception
+
+end

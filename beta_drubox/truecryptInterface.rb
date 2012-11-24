@@ -28,6 +28,11 @@ class TruecryptInterface
 		File.delete(randomFileVol) if (File.exists?(randomFileVol))
 	end
 
+	def self.existsVolume?(login)
+		cryptVol = DRUBOX_FOLDER+"/.hd/"+login+".ci"
+		File.exists?(cryptVol)
+	end
+
 	def self.mountVolume(login, pw)
 		mountPoint = DRUBOX_FOLDER+"/"+login
 		Dir.mkdir(mountPoint) if(!File.directory?(mountPoint)) #punto de montaje
@@ -41,7 +46,8 @@ class TruecryptInterface
 	def self.unmountVolume(login)
 		cryptVol = DRUBOX_FOLDER+"/.hd/"+login+".ci"
 		
-		`truecrypt -d #{cryptVol}`
+		res = `truecrypt -d #{cryptVol} 2>&1`
+		puts "ocupado" if (res!=nil) and (res.to_s.include?("device is busy"))
 	end
 
 end

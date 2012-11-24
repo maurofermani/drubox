@@ -64,24 +64,24 @@ class RuboxTree < Qt::TreeWidget
 		end
 	end
 
-	def addFile(files, newPath = nil)
+	def addFile(file, newPath = nil)
 		
 		path = (newPath==nil)? @path : newPath["path"]
-		files.each{ |f|
-			file = path+"/"+File.basename(f)
+		
+		file = path+"/"+File.basename(file)
 
-			item = Qt::TreeWidgetItem.new()
-			item.setText(0, File.basename(file))
-			item.setText(1, File.mtime(file).strftime("%Y-%m-%d %I:%M:%S %p"))
-			item.setText(2, (File.size(file).to_s + ' bytes'))
-			item.setText(3, File.dirname(file) + '/')
-			item.setIcon(0, Qt::Icon.new(FILE_ICON_PATH))
-			if (newPath==nil)
-				addTopLevelItem(item)
-			else
-				 newPath["item"].insertChild(newPath["item"].childCount, item)
-			end	
-		}
+		item = Qt::TreeWidgetItem.new()
+		item.setText(0, File.basename(file))
+		item.setText(1, File.mtime(file).strftime("%Y-%m-%d %I:%M:%S %p"))
+		item.setText(2, (File.size(file).to_s + ' bytes'))
+		item.setText(3, File.dirname(file) + '/')
+		item.setIcon(0, Qt::Icon.new(FILE_ICON_PATH))
+		if (newPath==nil)
+			addTopLevelItem(item)
+		else
+			 newPath["item"].insertChild(newPath["item"].childCount, item)
+		end	
+		
 	end
 
 	def addFolder(folderPath, newPath = nil)

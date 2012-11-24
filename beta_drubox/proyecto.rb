@@ -27,21 +27,23 @@ class Proyecto
 		@server_project_path = "git://127.0.0.1/"+@carpeta
 	end	
 
-	def pull(commit_message)
+	def pull()
 
 		begin
+			puts "ooo"
 			@git.fetch('origin')
-		rescue Git::GitExecuteError => error_git #no se hizo el 1er commit
-			puts "no hay 1er commit\n"+error_git.to_s
-		else #1er commit ok :)
+		rescue Git::GitExecuteError => error_git 
+			puts "falla fetch\n"+error_git.to_s
+			raise DownloadException, "Error al bajar los cambios desde el servidor" , caller
+		else
 			begin	
-				@git.merge("origin/master","-m #{commit_message}: merge")
-			rescue Git::GitExecuteError => error_git #hay conflicto :(
-							
-			#si no hay 1er commit, el fetch no falla.... hay q ver aca si es conflicto o directorio limpio
+				merge_message = @git.gcommit('FETCH_HEAD').message
+				puts merge_message
+				@git.merge("origin/master","-m #{merge_message}: merge")
+			rescue Git::GitExecuteError => error_git 
 				if(error_git.to_s.include?("not something we can merge"))
-					puts "veeerr: "+error_git.to_s
-				else 				
+					puts "veeerr: "+error_git.to_s #no hay 1er commit 
+				else #hay conflicto :(				
 
 					@git.each_conflict{ |f| 
 
@@ -80,92 +82,57 @@ class Proyecto
 						@git.remove(f)
 				
 					}
-					@git.commit("#{commit_message}: merge commit")
+					@git.commit("#{merge_message}: merge commit")
 				end
-			ensure					
-				#@git.push('origin','master')
 			end
 		end
-	
-
-		#puts @git.status.pretty
-		#@git.add_remote('alfin',"ssh://localhost/var/cache/git/alfin")
-		#@git.add_remote('ra',"/var/cache/git/alfin")
-	
-	
-		#antes de esto agregar que revise si existe el remote origin y sino crearlo
-		#controlar porque si no hay commits en origin pincha...
-		#@git.pull("origin","origin/master","Pull desde el server....")		
-		puts "salio"	
 	end
 
 	def push()
-		begin
 		@git.push('origin','master')
-		rescue Git::GitExecuteError => error_git 
-			puts "error en push: "+error_git.to_s
-		end
-		puts "fue push!!"
 	end
 
 	def abrirProyecto()
-
-		#montar volumen TC en punto de montaje
-		#seguir con logica anterior...
-		
-		#if(!File.directory?(@user_projects_path))
-		#	Dir.mkdir(@user_projects_path)
-		#end
-
-		if(File.directory?(@project_path))
-			if(File.directory?(@project_path+"/.git"))
-				puts "existe con git "+@carpeta
-				@git = Git.open(@project_path)
+		begin
+			if(File.directory?(@project_path))
+				if(File.directory?(@project_path+"/.git"))
+					puts "existe con git "+@carpeta
+					@git = Git.open(@project_path)
 				
-				begin
-					@git.add_remote('origin',@server_project_path)	
-				rescue Git::GitExecuteError => error_git #remote ya creado
-					puts "Error origen ya existe: "+error_git.to_s	
-				end
-				
-				#pull()
-				#push()				
+					begin
+						@git.add_remote('origin',@server_project_path)	
+					rescue Git::GitExecuteError => error_git #remote ya creado
+						puts "Error origen ya existe: "+error_git.to_s	
+					end
 
+				else
+					puts "existe sin git "+@carpeta		
+				end		
 			else
-				puts "existe sin git "+@carpeta		
-			end		
-		else
-			#crear repo, iniciar git y hacer pull	
-			
-			puts "no existe "+@carpeta
-			
-			#Dir.mkdir(PROJECTS_PATH+"/"+@carpeta)
-			#@git = Git.init(PROJECTS_PATH+"/"+@carpeta)
-			#puts "ssh://localhost/var/cache/git/Mi\\ proyecto"
-			#@git.add_remote('server',SERVER_PROJECTS_PATH+"/"+@carpeta)
-			#@git.pull("server","server/master","Pull de server a "+@carpeta)
-			@git = Git.clone(@server_project_path,@carpeta,{:path => @user_projects_path})	
+				puts "no existe "+@carpeta
+				@git = Git.clone(@server_project_path,@carpeta,{:path => @user_projects_path})	
+			end
 
-			
+			@project_path
+		rescue Exception
+			raise OpenProjectException, "Error al abrir el proyecto", caller
 		end
-		#if(@tree!=nil)
-		#	@tree = RuboxTree.new(nil,@project_path)
-		#else
-		#	@tree.populate()
-		#end
-		return @project_path
 	end
 
-	def addFile(files, newPath = nil)
+	def addFile(file, newPath = nil)
 		path = (newPath == nil)? @project_path : newPath["path"]		
-		files.each{ |f|
-			FileUtils.cp(f, path+"/"+File.basename(f))	
-		}
+		if(added = !File.exists?(path+"/"+File.basename(file)))		
+			FileUtils.cp(file, path+"/"+File.basename(file))
+		end
+		return added
 	end
 
 	def addFolder(folder, newPath = nil)
 		path = (newPath == nil)? @project_path : newPath["path"]
-		FileUtils.cp_r(folder, path+"/"+File.basename(folder))
+		if(added = !File.exists?(path+"/"+File.basename(folder)))
+			FileUtils.cp_r(folder, path+"/"+File.basename(folder))
+		end
+		return added
 	end
 
 	def prepareAddFiles(files, path)
@@ -228,7 +195,7 @@ class Proyecto
 		stageFiles()
 		
 		begin
-			@git.commit(commit_message)
+			@git.commit(commit_message) if hayCambios?
 		rescue Git::GitExecuteError => error_git #working dir clean?
 			if (error_git.to_s.include?("nothing to commit"))
 				puts "working directory clean"
@@ -236,7 +203,7 @@ class Proyecto
 				puts error_git.to_s
 			end
 		end	
-		pull(commit_message)
+		pull()
 		push()
 	end
 
@@ -245,7 +212,7 @@ class Proyecto
 		stageFiles()
 
 		begin
-			@git.commit(commit_message) ##ver esto... //pincha si no hay  nada para hacer commit...
+			@git.commit(commit_message) if hayCambios?
 		rescue Git::GitExecuteError => error_git #working dir clean?
 			if (error_git.to_s.include?("nothing to commit"))
 				puts "working directory clean"
@@ -253,7 +220,7 @@ class Proyecto
 				puts error_git.to_s
 			end
 		end		
-		pull(commit_message)
+		pull()
 	end
 
 	def refresh_old()
@@ -278,6 +245,11 @@ class Proyecto
 		@git.checkout_file(sha,path)
 		FileUtils.cp(path,newFileName)
 		@git.checkout_file("HEAD",path)
+	end
+
+	def hayCambios?()
+		cambios = @git.status.added.length() + @git.status.changed.length() + @git.status.untracked.length() + @git.status.deleted.length()
+		return cambios!=0 
 	end
 
 

@@ -18,12 +18,21 @@ class Usuario
 	def iniciarSesion(login,password)
 		@cookie =Server::iniciarSesion(login,password)
 		@login = login
-		if (@cookie !=nil)
-			TruecryptInterface::initDirs()
-			TruecryptInterface::createVolume(@login, password, 10485760)
-			TruecryptInterface::mountVolume(@login, password)
-		end
+		@password = password #ver...
+		TruecryptInterface::initDirs() if (@cookie !=nil)
 		return @cookie != nil
+	end
+
+	def tieneWorkspace?()
+		TruecryptInterface::existsVolume?(@login)
+	end
+
+	def crearWorkspace(size = 10485760)
+		TruecryptInterface::createVolume(@login, @password, size) if (@cookie !=nil)
+	end
+
+	def montarWorkspace()
+		TruecryptInterface::mountVolume(@login, @password) if (@cookie !=nil)
 	end
 
 	def cerrarSesion()
