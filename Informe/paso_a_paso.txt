@@ -1,0 +1,47 @@
+
++######################################################+
+|Instalacion de RVM                                    |
++######################################################+
+\curl -L https://get.rvm.io | bash -s stable --ruby
+
++######################################################+
+|RVM Requeriments                                      |
++######################################################+
+rvm requirements
+yum install -y gcc-c++ patch readline readline-devel zlib zlib-devel libyaml-devel libffi-devel openssl-devel make bzip2 autoconf automake libtool bison iconv-devel curl
+######sqlite######
+yum install sqlite sqlite-devel
+######mysql#######
+yum install mysql mysql-server libmysql-ruby libmysqlclient-dev mysql-devel
+chkconfig --level 2345 mysqld on
+
++######################################################+
+|Reinstalamos ruby                                     |
++######################################################+
+rvm reinstall 1.9.3
+
++######################################################+
+|Instalamos Rails con RVM                              |
++######################################################+
+\curl -L https://get.rvm.io | bash -s stable --rails
+
+
++######################################################+
+|###############INSTALACION DE RUBOX###################|
++######################################################+
+
++######################################################+
+|Descargar de Rubox desde Github                       |
++######################################################+
+mkdir ~/workspace
+cd ~/workspace
+git clone https://github.com/maurofermani/Rubox.git
+cd Rubox
+
++######################################################+
+|Insatalacion de gemas adicionales                     |
++######################################################+
+bundle config build.mysql2 --with-mysql-config='/usr/bin/mysql_config'
+bundle install
+
+
