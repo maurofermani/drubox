@@ -8,6 +8,7 @@ require './usuario.rb'
 require './exceptions/openProjectException.rb'
 require './exceptions/uploadException.rb'
 require './exceptions/downloadException.rb'
+require './logger/logger.rb'
 
 
 class DRuboxWindow < Qt::MainWindow

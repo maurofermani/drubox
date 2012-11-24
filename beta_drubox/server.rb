@@ -4,7 +4,8 @@ require 'json'
 
 class Server
 
-	@@http = Net::HTTP.new(ENV['server_host'], ENV['server_port'].to_i)
+	#@@http = Net::HTTP.new(ENV['server_host'], ENV['server_port'].to_i)
+	@@http = Net::HTTP.new("127.0.0.1", 3000)
 
 	def self.iniciarSesion(login,password)
 		url = "/sessions"

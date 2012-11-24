@@ -5,12 +5,13 @@ class Proyecto
 	#PROJECT_FOLDER = "drubox_files"
 	#PROJECTS_PATH = File.expand_path("../../..",$0)+"/"+PROJECT_FOLDER
 
-	DRUBOX_FOLDER = ENV["HOME"]+ ENV['drubox_folder'] # /home/usuario/Rubox
 	
+	DRUBOX_FOLDER = ENV["HOME"]+"/Rubox" # /home/usuario/Rubox
 
 	attr_reader :id, :nombre, :descripcion, :accessType
 
 	def initialize(id, nombre, descripcion, username, accessType)
+		
 		@id = id
 		@nombre = nombre
 		@descripcion = descripcion
@@ -22,7 +23,7 @@ class Proyecto
 		
 		@project_path = @user_projects_path+"/"+@carpeta # /home/usuario/.drubox/login/proyecto
 			
-		@server_project_path = "git://#{ENV['server_host']}/"+@carpeta
+		@server_project_path = "git://127.0.01/"+@carpeta
 	end	
 
 	def pull()
@@ -91,30 +92,30 @@ class Proyecto
 	end
 
 	def abrirProyecto()
-		begin
-			if(File.directory?(@project_path))
-				if(File.directory?(@project_path+"/.git"))
-					puts "existe con git "+@carpeta
-					@git = Git.open(@project_path)
-				
-					begin
-						@git.add_remote('origin',@server_project_path)	
-					rescue Git::GitExecuteError => error_git #remote ya creado
-						puts "Error origen ya existe: "+error_git.to_s	
-					end
-
-				else
-					puts "existe sin git "+@carpeta		
-				end		
+	
+		if(File.directory?(@project_path))
+			if(File.directory?(@project_path+"/.git"))
+				@git = Git.open(@project_path)
+				begin
+					@git.add_remote('origin',@server_project_path)
+					Logger.log(@carpeta,3,"Se agrego el remote origin = "+@server_project_path)	
+				rescue Git::GitExecuteError => error_git #remote ya creado
+					Logger.log(@carpeta,2,"El remote origin ya existe")	
+				end
 			else
-				puts "no existe "+@carpeta
-				@git = Git.clone(@server_project_path,@carpeta,{:path => @user_projects_path})	
+				puts "existe sin git "+@carpeta		
+			end		
+		else
+			puts "no existe "+@carpeta
+			begin			
+			@git = Git.clone(@server_project_path,@carpeta,{:path => @user_projects_path})	
+			rescue Git::GitExecuteError => e
+				raise CloneProjectException, "Error al clonar el proyecto", caller
+				Logger.log(@carpeta,1,"No se pudo clonar el proyecto")
 			end
-
-			@project_path
-		rescue Exception
-			raise OpenProjectException, "Error al abrir el proyecto", caller
 		end
+
+		@project_path
 	end
 
 	def addFile(file, newPath = nil)
@@ -211,11 +212,11 @@ class Proyecto
 
 		begin
 			@git.commit(commit_message) if hayCambios?
-		rescue Git::GitExecuteError => error_git #working dir clean?
-			if (error_git.to_s.include?("nothing to commit"))
-				puts "working directory clean"
+		rescue Git::GitExecuteError => e #working dir clean?
+			if (e.to_s.include?("nothing to commit"))
+				Logger.log(@carpeta,3,"No existen cambios en el working directory (Proyecto.download)")
 			else
-				puts error_git.to_s
+				
 			end
 		end		
 		pull()
