@@ -1,9 +1,9 @@
 require 'Qt4'
-require 'yaml'
 require './ruboxTree.rb'
 require './loginDialog.rb'
 require './timeMachineDialog.rb'
 require './usuario.rb'
+require './config/yml.rb'
 
 
 class DRuboxWindow < Qt::MainWindow
@@ -256,21 +256,11 @@ class DRuboxWindow < Qt::MainWindow
 end #class
 
 begin
-#Cargo las propiedades del sistema
-yml = YAML::load(File.open('config/environment.yml'))
-yml.each_pair { |key, value|
-  ENV[key] = value.to_s
-}
-
-app = Qt::Application.new(ARGV)
-#Qt::Application::setStyle("motif")
-window = DRuboxWindow.new()
-window.show()
-app.exec()
-rescue Exception => e
-	puts e.to_s
-ensure
-	puts "Salida de ensure"
+  app = Qt::Application.new(ARGV)
+  #Qt::Application::setStyle("motif")
+  window = DRuboxWindow.new()
+  window.show()
+  app.exec()
 end
 
 
