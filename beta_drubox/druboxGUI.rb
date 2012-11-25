@@ -186,7 +186,7 @@ class DRuboxWindow < Qt::MainWindow
 					}
 					connect(@projectCombo,SIGNAL('currentIndexChanged(int)'),self,SLOT('projectSelected(int)'))
 				else
-					Logger::log("Usuario o password incorrectos")
+					Logger::logMessage("Usuario o password incorrectos")
 					@usuario = nil
 				end
 			end
@@ -300,12 +300,28 @@ class DRuboxWindow < Qt::MainWindow
 	def upload()
 		begin
 		cambios = @proyecto.hayCambios?
-		msg = (cambios)? Qt::InputDialog::getText(self,tr("Mensaje"),tr("Commit Message"),Qt::LineEdit::Normal, "", @ok) : ""
-		puts @ok	
-		if !cambios or @ok
-			@proyecto.upload(msg)
-			refreshTree()
-		end
+                if (cambios)
+                        ok = Qt::Boolean.new
+                        msg = Qt::InputDialog::getText(self,tr("Mensaje"),
+                                tr("Mensaje de los cambios"),
+                                Qt::LineEdit::Normal, "", ok)
+                        if !ok.nil?
+                                if msg!= nil and !msg.empty?
+                                        @proyecto.upload(msg)
+                                        refreshTree()
+                                        Qt::MessageBox::information(self,tr('DRubox'),
+                                                tr("Cambios subidos correctamente."))
+                                else
+                                        Qt::MessageBox::information(self,tr('DRubox'),
+                                                tr("Ingrese un mensaje para los cambios."))
+                                end
+                        end
+                else
+                        @proyecto.upload("")
+                        refreshTree()
+                        Qt::MessageBox::information(self,tr('DRubox'),
+                                tr("Cambios subidos correctamente."))
+                end
 		rescue CommitException, DownloadException, UploadException  => e
 			Logger::log( (@proyecto.nombre() == nil)? "": @proyecto.nombre(), Logger::ERROR,e.message())
 			Qt::MessageBox::critical(self,tr('DRubox'),tr(e.message()))
@@ -318,18 +334,34 @@ class DRuboxWindow < Qt::MainWindow
 	def download()
 		begin
 		cambios = @proyecto.hayCambios?
-		msg = (cambios)? Qt::InputDialog::getText(self,tr("Mensaje"),tr("Commit Message"),Qt::LineEdit::Normal, "", @ok) : ""
-		puts @ok	
-		if !cambios or @ok
-			@proyecto.download(msg)
+		if (cambios)
+			ok = Qt::Boolean.new
+			msg = Qt::InputDialog::getText(self,tr("Mensaje"),
+				tr("Mensaje de los cambios"),
+				Qt::LineEdit::Normal, "", ok)
+			if !ok.nil?
+				if msg!= nil and !msg.empty?
+					@proyecto.download(msg)
+					refreshTree()
+					Qt::MessageBox::information(self,tr('DRubox'),
+						tr("Cambios descargados correctamente."))
+				else
+					Qt::MessageBox::information(self,tr('DRubox'),
+						tr("Ingrese un mensaje para los cambios."))
+				end
+			end
+		else
+			@proyecto.download("")
 			refreshTree()
+			Qt::MessageBox::information(self,tr('DRubox'),
+				tr("Cambios descargados correctamente."))
 		end
 		rescue CommitException, DownloadException  => e
 			Logger::log( (@proyecto.nombre() == nil)? "": @proyecto.nombre(), Logger::ERROR,e.message())
 			Qt::MessageBox::critical(self,tr('DRubox'),tr(e.message()))
 		rescue  Exception => e	
 			Logger::log( (@proyecto.nombre() == nil)? "": @proyecto.nombre(), Logger::ERROR,e.message())
-			Qt::MessageBox::critical(self,tr('DRubox'),tr("Error al bajar los cambios desde el servidor"))
+			Qt::MessageBox::critical(self,tr('DRubox'),tr("Error al descargar los cambios desde el servidor"))
 		end
 	end
 
