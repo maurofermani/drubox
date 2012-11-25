@@ -11,7 +11,7 @@ begin
   puts "-------------------------------------------------\n"
   puts "[" + Time.new.to_s + "]\n"
   #autor del commit
-  gitLog = `git log --pretty=' Autor: %an %n Commit: %H %n Mensaje: %s' -n 1`
+  gitLog = `git log --pretty=' Autor: [%an] %n Commit: %H %n Mensaje: %s' -n 1`
   #lo escribo en el log
   puts gitLog.to_s
   #obtengo el login. Formato: [<login>] <name>
