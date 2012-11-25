@@ -4,7 +4,7 @@ require './truecryptInterface.rb'
 
 class Usuario
 
-	attr_reader :id, :nombre, :descripcion
+	attr_reader :id, :nombre, :descripcion, :login
 
 	def initialize()
 		@cookie = nil
