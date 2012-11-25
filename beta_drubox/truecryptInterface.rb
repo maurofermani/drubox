@@ -49,7 +49,9 @@ class TruecryptInterface
 		cryptVol = DRUBOX_FOLDER+"/.hd/"+login+".ci"
 		
 		res = `truecrypt -d #{cryptVol} 2>&1`
-		puts "ocupado" if (res!=nil) and (res.to_s.include?("device is busy"))
+		if (res.to_s.include?("device is busy")) 
+			raise TruecryptException, "Error al desmontar el volumen. Dispositivo ocupado." , caller
+		end
 	end
 
 end
