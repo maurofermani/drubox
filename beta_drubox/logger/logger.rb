@@ -1,4 +1,4 @@
-
+require './config/yml.rb'
 
 class Logger
 	
@@ -6,20 +6,26 @@ class Logger
 	WARNING = "Warning"
 	INFO = "Info"
 
-	LOG_HOME = ENV["HOME"]+"/Rubox/" + "p"
-	@@logFile = File.open(LOG_HOME + "/.client.log", "a")
+	DRUBOX_FOLDER = ENV["HOME"] + "/" + YML::get("drubox_folder")
+
+	@@druboxFolder = Dir.mkdir(DRUBOX_FOLDER) if(!File.directory?(DRUBOX_FOLDER))
+	@@logFile = File.open(DRUBOX_FOLDER + "/.client.log", "a")
 
 	def self.log(message)
 		str =  "-------------------------------------------------\n"
-		str += "[" + Time.new.to_s + "]\n"
+		str += "[" + Time.new.to_s + "] "
+		str += ENV["user"] == nil ? "Sin usuario" : "Usuario: " + ENV["user"]
+		str += "\n"
 		str += message + "\n"
 		@@logFile.puts(str)
 		@@logFile.flush
 	end
 
-	def self.log(project, level = @@INFO, message)
+	def self.log(project, level = INFO, message)
 		str =  "-------------------------------------------------\n"
-		str += "[" + Time.new.to_s + "]\n"
+		str += "[" + Time.new.to_s + "] "
+		str += ENV["user"] == nil ? "Sin usuario" : "Usuario: " + ENV["user"]
+                str += "\n"
 		str += project + " -> " + level + ": " + message + "\n"
 		@@logFile.puts(str)
 		@@logFile.flush	

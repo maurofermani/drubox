@@ -8,6 +8,7 @@ class Proyecto
 
 
 	DRUBOX_FOLDER = ENV["HOME"]+ "/" + YML::get("drubox_folder") # /home/usuario/Rubox
+	SERVER_HOST = YML::get("server_host")
 
 	attr_reader :id, :nombre, :descripcion, :accessType
 
@@ -24,7 +25,7 @@ class Proyecto
 		
 		@project_path = @user_projects_path+"/"+@carpeta # /home/usuario/.drubox/login/proyecto
 			
-		@server_project_path = "git://127.0.01/"+@carpeta
+		@server_project_path = "git://" + SERVER_HOST + "/"+ @carpeta
 	end	
 
 	def pull()

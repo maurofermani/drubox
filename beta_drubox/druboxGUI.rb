@@ -157,6 +157,7 @@ class DRuboxWindow < Qt::MainWindow
 				@usuario = Usuario.new()
 				if (@usuario.iniciarSesion(u,p))
 					puts "Iniciada"
+					ENV["user"] = @usuario.login
 
 					#metodo de consulta en la calse usuario para saber si existe el dir de trabajo
 					#consultar, y si no existe, preguntar tamaño y usar metodo para crearlo
@@ -185,7 +186,8 @@ class DRuboxWindow < Qt::MainWindow
 					}
 					connect(@projectCombo,SIGNAL('currentIndexChanged(int)'),self,SLOT('projectSelected(int)'))
 				else
-					puts "No iniciada"
+					Logger::log("Usuario o password incorrectos")
+					@usuario = nil
 				end
 			end
 		end
@@ -200,6 +202,7 @@ class DRuboxWindow < Qt::MainWindow
 		@projectCombo.clear() if(@projectCombo != nil)
 		@currentIndex = 0
 		enableActions(false)
+		ENV["user"] = nil
 	end
 
 	def quitDrubox()
