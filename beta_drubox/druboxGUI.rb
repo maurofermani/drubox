@@ -10,6 +10,7 @@ require './exceptions/downloadException.rb'
 require './exceptions/cloneProjectException.rb'
 require './exceptions/commitException.rb'
 require './exceptions/getCommitsException.rb'
+require './exceptions/serverException.rb'
 require './logger/logger.rb'
 require './config/yml.rb'
 

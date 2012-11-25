@@ -1,4 +1,4 @@
-require './server.rb'
+require './serverInterface.rb'
 require './proyecto.rb'
 require './truecryptInterface.rb'
 
@@ -16,7 +16,7 @@ class Usuario
 	end
 
 	def iniciarSesion(login,password)
-		@cookie =Server::iniciarSesion(login,password)
+		@cookie =ServerInterface::iniciarSesion(login,password)
 		@login = login
 		@password = password #ver...
 		TruecryptInterface::initDirs() if (@cookie !=nil)
@@ -36,16 +36,16 @@ class Usuario
 	end
 
 	def cerrarSesion()
-		Server::cerrarSesion(@cookie)
+		ServerInterface::cerrarSesion(@cookie)
 		TruecryptInterface::unmountVolume(@login)
 	end
 
 	def cargarProyectos()
 		@projects = Array.new()		
-		proys = Server::listaProyectos(@cookie)
+		proys = ServerInterface::listaProyectos(@cookie)
 		proys.each { |p_id|
 			#@proyectos.push(p['path'])
-			p_info = Server::infoProyecto(@cookie, p_id['project_id'])
+			p_info = ServerInterface::infoProyecto(@cookie, p_id['project_id'])
 			@projects.push( Proyecto.new(p_info['id'], p_info['name'], p_info['description'], @login, p_id['type_id']) )
 		}
 		getProjectName()

@@ -90,8 +90,8 @@ class Proyecto
 	end
 
 	def push()
-		begin		
-		@git.push('origin','master')
+		begin
+			@git.push('origin','master')
 		rescue Git::GitExecuteError => e
 			if (e.to_s.include?("refspec master does not match any"))
 				Logger::log(@carpeta,Logger::INFO,"No hay cambios para subir al servidor")
@@ -201,6 +201,7 @@ class Proyecto
 		stageFiles()
 		
 		begin
+			@git.config("user.name",@username)
 			@git.commit(commit_message) if hayCambios?
 		rescue Git::GitExecuteError => e #working dir clean?
 			if (e.to_s.include?("nothing to commit"))
@@ -218,6 +219,7 @@ class Proyecto
 		stageFiles()
 
 		begin
+			@git.config("user.name",@username)
 			@git.commit(commit_message) if hayCambios?
 		rescue Git::GitExecuteError => e #working dir clean?
 			if (e.to_s.include?("nothing to commit"))
@@ -245,9 +247,7 @@ class Proyecto
 	end
 
 	def recuperarArchivo(path, newFileName, sha)	
-		# copiar el archivo rollbackeado con otro nombre, y hacerle un checkout al original al head para tener las 2 versiones...		
-		puts "path: "+path		
-		puts "newFileName: "+newFileName
+		# copiar el archivo rollbackeado con otro nombre, y hacerle un checkout al original al head para tener las 2 versiones...	
 		
 		@git.checkout_file(sha,path)
 		FileUtils.cp(path,newFileName)
