@@ -17,7 +17,7 @@ require './config/yml.rb'
 
 
 
-class DRuboxWindow < Qt::MainWindow
+class DRuboxGUI < Qt::MainWindow
 
 	slots 'login()', 'projectSelected(int)','addFile()','addFolder()','remove()','upload()','download()','timeMachine()','logout()','quitDrubox()','getStatus()'
 
@@ -29,7 +29,7 @@ class DRuboxWindow < Qt::MainWindow
 		createToolBars()
 		
 		setWindowIcon(Qt::Icon.new('./images/ic32.png'))
-		setWindowTitle("Rubox Desktop Application")
+		setWindowTitle("Rubox - Aplicacion de Escritorio")
 
 		@usuario = nil
 		@currentIndex = 0
@@ -159,7 +159,6 @@ class DRuboxWindow < Qt::MainWindow
 				p = loginDialog.getPassword()
 				@usuario = Usuario.new()
 				if (@usuario.iniciarSesion(u,p))
-					puts "Iniciada"
 					ENV["user"] = @usuario.login
 
 					#metodo de consulta en la calse usuario para saber si existe el dir de trabajo
@@ -170,7 +169,6 @@ class DRuboxWindow < Qt::MainWindow
 						truecryptOptions = TruecryptOptionsDialog.new(self)	
 						truecryptOptions.exec()
 						size = truecryptOptions.getSize()
-						puts "size: "+size.to_s
 						@usuario.crearWorkspace(size)
 					end
 					@usuario.montarWorkspace()
@@ -189,20 +187,23 @@ class DRuboxWindow < Qt::MainWindow
 					}
 					connect(@projectCombo,SIGNAL('currentIndexChanged(int)'),self,SLOT('projectSelected(int)'))
 				else
+					@usuario = nil					
 					Logger::logMessage("Usuario o password incorrectos")
-					@usuario = nil
+					Qt::MessageBox::warning(self,tr('DRubox'),tr("Usuario o password incorrectos"))
 				end
 			end
 		end
 		rescue TruecryptException => e
-			Logger::log( (@proyecto.nombre() == nil)? "": @proyecto.nombre(),Logger::ERROR,e.message())
+			Logger::log( (@proyecto == nil or @proyecto.nombre() == nil)? "": @proyecto.nombre(),Logger::ERROR,e.message())
 			Qt::MessageBox::critical(self,tr('DRubox'),tr(e.message()))
 		rescue ServerException => e
-			Logger::log( (@proyecto.nombre() == nil)? "": @proyecto.nombre(),Logger::ERROR,e.message())
+			Logger::log( (@proyecto == nil or @proyecto.nombre() == nil)? "": @proyecto.nombre(),Logger::ERROR,e.message())
 			Qt::MessageBox::critical(self,tr('DRubox'),tr(e.message()))
+			@usuario = nil
 		rescue Exception => e
-			Logger::log( (@proyecto.nombre() == nil)? "": @proyecto.nombre(),Logger::ERROR,e.message())
+			Logger::log( (@proyecto == nil or @proyecto.nombre() == nil)? "": @proyecto.nombre(),Logger::ERROR,e.message())
 			Qt::MessageBox::critical(self,tr('DRubox'),tr("Error al loguearse"))
+			logout()
 		end
 	end
 
@@ -210,10 +211,10 @@ class DRuboxWindow < Qt::MainWindow
 		begin
 			@usuario.cerrarSesion() if(@usuario != nil)
 		rescue TruecryptException => e
-			Logger::log( (@proyecto.nombre() == nil)? "": @proyecto.nombre(), Logger::ERROR,e.message())
+			Logger::log( (@proyecto == nil or @proyecto.nombre() == nil)? "": @proyecto.nombre(), Logger::ERROR,e.message())
 			Qt::MessageBox::warning(self,tr('DRubox'),tr(e.message()))
 		rescue Exception => e
-			Logger::log( (@proyecto.nombre() == nil)? "": @proyecto.nombre(), Logger::ERROR,e.message())
+			Logger::log( (@proyecto == nil or @proyecto.nombre() == nil)? "": @proyecto.nombre(), Logger::ERROR,e.message())
 			Qt::MessageBox::critical(self,tr('DRubox'),tr("Error de conexion al servidor"))
 		ensure
 			@usuario = nil
@@ -278,7 +279,7 @@ class DRuboxWindow < Qt::MainWindow
 				end
 			end
 		rescue Exception => e
-			Logger::log( (@proyecto.nombre() == nil)? "": @proyecto.nombre(), Logger::ERROR,e.message())			
+			Logger::log( (@proyecto == nil or @proyecto.nombre() == nil)? "": @proyecto.nombre(), Logger::ERROR,e.message())			
 			Qt::MessageBox::critical(self,tr('DRubox'),tr("Error al agregar el archivo"))
 			refreshTree()
 		end
@@ -303,7 +304,7 @@ class DRuboxWindow < Qt::MainWindow
 				end
 			end
 		rescue Exception => e
-			Logger::log( (@proyecto.nombre() == nil)? "": @proyecto.nombre(), Logger::ERROR,e.message())			
+			Logger::log( (@proyecto == nil or @proyecto.nombre() == nil)? "": @proyecto.nombre(), Logger::ERROR,e.message())			
 			Qt::MessageBox::critical(self,tr('DRubox'),tr("Error al agregar la carpeta"))
 			refreshTree()
 		end
@@ -315,7 +316,7 @@ class DRuboxWindow < Qt::MainWindow
 			@proyecto.remove(rm_path) if(rm_path!=nil)
 			getStatus()
 		rescue Exception => e
-			Logger::log( (@proyecto.nombre() == nil)? "": @proyecto.nombre(), Logger::ERROR,e.message())			
+			Logger::log( (@proyecto == nil or @proyecto.nombre() == nil)? "": @proyecto.nombre(), Logger::ERROR,e.message())			
 			Qt::MessageBox::critical(self,tr('DRubox'),tr("Error al eliminar el archivo o carpeta"))
 			refreshTree()
 		end
@@ -347,10 +348,10 @@ class DRuboxWindow < Qt::MainWindow
                                 tr("Cambios subidos correctamente."))
                 end
 		rescue CommitException, DownloadException, UploadException  => e
-			Logger::log( (@proyecto.nombre() == nil)? "": @proyecto.nombre(), Logger::ERROR,e.message())
+			Logger::log( (@proyecto == nil or @proyecto.nombre() == nil)? "": @proyecto.nombre(), Logger::ERROR,e.message())
 			Qt::MessageBox::critical(self,tr('DRubox'),tr(e.message()))
 		rescue Exception => e
-			Logger::log( (@proyecto.nombre() == nil)? "": @proyecto.nombre(), Logger::ERROR,e.message())
+			Logger::log( (@proyecto == nil or @proyecto.nombre() == nil)? "": @proyecto.nombre(), Logger::ERROR,e.message())
 			Qt::MessageBox::critical(self,tr('DRubox'),tr("Error al subir los cambios al servidor"))			
 		end
 	end
@@ -381,10 +382,10 @@ class DRuboxWindow < Qt::MainWindow
 				tr("Cambios descargados correctamente."))
 		end
 		rescue CommitException, DownloadException  => e
-			Logger::log( (@proyecto.nombre() == nil)? "": @proyecto.nombre(), Logger::ERROR,e.message())
+			Logger::log( (@proyecto == nil or @proyecto.nombre() == nil)? "": @proyecto.nombre(), Logger::ERROR,e.message())
 			Qt::MessageBox::critical(self,tr('DRubox'),tr(e.message()))
 		rescue  Exception => e	
-			Logger::log( (@proyecto.nombre() == nil)? "": @proyecto.nombre(), Logger::ERROR,e.message())
+			Logger::log( (@proyecto == nil or @proyecto.nombre() == nil)? "": @proyecto.nombre(), Logger::ERROR,e.message())
 			Qt::MessageBox::critical(self,tr('DRubox'),tr("Error al descargar los cambios desde el servidor"))
 		end
 	end
@@ -407,10 +408,10 @@ class DRuboxWindow < Qt::MainWindow
 				end
 			end
 		rescue GetCommitsException => e
-			Logger::log( (@proyecto.nombre() == nil)? "": @proyecto.nombre(), Logger::ERROR,e.message())
+			Logger::log( (@proyecto == nil or @proyecto.nombre() == nil)? "": @proyecto.nombre(), Logger::ERROR,e.message())
 			Qt::MessageBox::critical(self,tr('DRubox'),tr(e.message()))	
 		rescue Exception => e
-			Logger::log( (@proyecto.nombre() == nil)? "": @proyecto.nombre(), Logger::ERROR,e.message())
+			Logger::log( (@proyecto == nil or @proyecto.nombre() == nil)? "": @proyecto.nombre(), Logger::ERROR,e.message())
 			Qt::MessageBox::critical(self,tr('DRubox'),tr("Error al obtener las versiones anteriores del archivo"))	
 		end
 	end
@@ -435,8 +436,9 @@ end #class
 begin
   app = Qt::Application.new(ARGV)
   #Qt::Application::setStyle("motif")
-  window = DRuboxWindow.new()
+  window = DRuboxGUI.new()
   window.show()
+  window.login()
   app.exec()
 
 end

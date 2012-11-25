@@ -1,47 +1,23 @@
 class RuboxTree < Qt::TreeWidget
-#class RuboxTree < Qt::TreeView
-	
-	#FOLDER_PATH = "/home/p4c/Escritorio/ejrubyqt/drubox/drubox_files"
+
 	FILE_ICON_PATH = "./images/File.png"
 	FOLDER_ICON_PATH = "./images/Folder.png"
-
-#	def initialize (parent = nil)
-#		super(parent)
-#		#setHeaderLabels(['Id','Nombre', 'Tipo', 'Path', 'Estado'])
-#		@model = Qt::FileSystemModel.new()
-#		@model.setRootPath(FOLDER_PATH)
-#		@model.setReadOnly(false)
-#		
-#		setModel(@model)
-#		setRootIndex(@model.index(FOLDER_PATH));
-#		resize(640, 480);
-#	end
 
 	def initialize (parent = nil, path)
 		super(parent)
 		setHeaderLabels(["Nombre", "Estado", "Tama\u00f1o", "","Fecha Modificacion"])
 		5.times{ |i| header().setResizeMode(i,Qt::HeaderView::ResizeToContents) }
 		
-		#g = Git.init(FOLDER_PATH)
-		#g = Git.open(FOLDER_PATH)
-		
 		@path = path
 		populate(self,@path)
-		
-		#puts g.status
-		#puts g.status.added
-		#puts g.status.changed
-		#puts g.status.deleted
-		#puts g.status.untracked
-		#puts g.status.pretty
 	end
 
 	def populate(tree, path, parent=nil)
 		Dir["#{path}/*"].each do |file|
-			#fill item information
+			
 			item = Qt::TreeWidgetItem.new()
 			item.setText(0, File.basename(file))
-			item.setText(1, "") #status se inicializa con el evento
+			item.setText(1, "")
 			item.setText(2, (File.size(file).to_s + ' bytes'))
 			item.setText(3, file)
 			item.setText(4, File.mtime(file).strftime("%Y-%m-%d %I:%M:%S %p"))
@@ -52,7 +28,7 @@ class RuboxTree < Qt::TreeWidget
 				item.setIcon(0, Qt::Icon.new(FOLDER_ICON_PATH) )	
 			end
 		
-			#add item to the tree
+			
 			if (parent == nil)
 				tree.addTopLevelItem(item)
 			else
@@ -118,8 +94,6 @@ class RuboxTree < Qt::TreeWidget
 			if (op==Qt::MessageBox::Yes)
 				parent = item[0].parent() ? item[0].parent() : invisibleRootItem()
 				i = parent.takeChild(parent.indexOfChild(item[0]))
-				puts "sacado: "+i.text(3)
-				puts "path: "+path
 				return path
 			else
 				return nil
@@ -159,13 +133,10 @@ class RuboxTree < Qt::TreeWidget
 	def updateStatusIcons(files, iconPath, statusText)
 		files.each{ |f,s|
 			filePath = @path+"/"+s.path.to_s
-			puts "filepath: "+filePath
 			fileName = File.basename(filePath)
-			puts "filename: "+fileName
+
 			items = findItems(filePath, Qt::MatchCaseSensitive|Qt::MatchRecursive,3)
 			items.each{ |i|
-				puts "1: "+filePath
-				puts "2: "+i.text(3)
 				if(i.text(3)==filePath)
 					i.setText(1, statusText)
 					i.setIcon(1, Qt::Icon.new(iconPath))		
@@ -175,13 +146,11 @@ class RuboxTree < Qt::TreeWidget
 	end
 
 	def updateStatusIconsDeleted(files, iconPath, statusText)
-		puts "deleted"
+
 		files.each{ |f,s|
 			
 			filePath = @path+"/"+s.path.to_s
-			puts "filepath: "+filePath
 			fileName = File.basename(filePath)
-			puts "filename: "+fileName
 			items = findItems(filePath, Qt::MatchCaseSensitive|Qt::MatchRecursive,3)
 			
 			if (items.length()==0)
@@ -225,8 +194,6 @@ class RuboxTree < Qt::TreeWidget
 				end
 			else
 				items.each{ |it|
-					puts "1: "+filePath
-					puts "2: "+it.text(3)
 					if(it.text(3)==filePath)
 						it.setText(1, statusText)
 						it.setIcon(1, Qt::Icon.new(iconPath))		

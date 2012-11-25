@@ -19,7 +19,7 @@ class ServerInterface
 				return nil
 			end
 		rescue Exception => e
-			raise ServerException, "Error al iniciar sesion", caller
+			raise ServerException, "Error en la conexion al iniciar sesion ", caller
 		end
 	end
 
@@ -30,7 +30,7 @@ class ServerInterface
 			}
 			resp, data = @@http.get("/logout",headers)
 		rescue Exception => e
-			raise ServerException, "Error al cerrar sesion", caller
+			raise ServerException, "Error en la conexion al cerrar sesion", caller
 		end
 	end
 
@@ -48,7 +48,7 @@ class ServerInterface
 				return nil
 			end
 		rescue Exception => e
-			raise ServerException, "Error al obtener la lista de proyectos", caller
+			raise ServerException, "Error en la conexion al obtener la lista de proyectos", caller
 		end
 	end
 
@@ -67,7 +67,7 @@ class ServerInterface
 				return nil
 			end
 		rescue Exception => e
-			raise ServerException, "Error al obtener la informacion del proyecto", caller
+			raise ServerException, "Error en la conexion al obtener la informacion del proyecto", caller
 		end
 	end
 

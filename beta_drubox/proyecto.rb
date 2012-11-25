@@ -33,7 +33,6 @@ class Proyecto
 		begin
 			@git.fetch('origin')
 		rescue Git::GitExecuteError => e
-			puts "enter vacio"
 			raise DownloadException, "Error al bajar los cambios desde el servidor" , caller
 		else
 			begin	
@@ -132,14 +131,7 @@ class Proyecto
 	end
 
 	def addFolder(folder, newPath = nil)
-		puts "folder: "+folder
-		puts "newPath: "+newPath["path"] if (newPath!=nil)
-
 		path = (newPath == nil)? @project_path : newPath["path"]
-
-		puts "dest_path: "+path
-		puts "final_path: "+path+"/"+File.basename(folder)
-		#FileUtils.cp_r(folder, path+"/"+File.basename(folder))
 		FileUtils.cp_r(folder, path)
 	end
 
