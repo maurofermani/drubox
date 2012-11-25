@@ -9,6 +9,7 @@ require './exceptions/uploadException.rb'
 require './exceptions/downloadException.rb'
 require './exceptions/cloneProjectException.rb'
 require './exceptions/commitException.rb'
+require './exceptions/getCommitsException.rb'
 require './logger/logger.rb'
 require './config/yml.rb'
 
@@ -236,37 +237,49 @@ class DRuboxWindow < Qt::MainWindow
 		begin		
 			newPath = @tree.getSelectedFolder()		
 			file = Qt::FileDialog::getOpenFileName(self,"Seleccione los archivos a agregar","/home")
-			#@proyecto.prepareAddFiles(@files) #listado de archivos repetidos...
-			#preguntar si se reemplazan
-			#reemplazar lo que se reemplaza
-			#pasar cambios a gui tree
-			added = @proyecto.addFile(file, newPath)
-			if added
-				@tree.addFile(file, newPath)
-			else
-				Qt::MessageBox::warning(self,tr('DRubox'),tr("El archivo no fue agregado porque ya existe"))
+			if (file!=nil)
+				yaExiste = @proyecto.fileExists?(file, newPath)		
+				if yaExiste
+					op = Qt::MessageBox::warning(self,tr('DRubox'),tr("El archivo ya existe, desea reemplazarlo?"),Qt::MessageBox::Yes | Qt::MessageBox::No)
+					if (op==Qt::MessageBox::Yes)
+						@proyecto.addFile(file, newPath)
+						refreshTree()
+					end
+				else
+					@proyecto.addFile(file, newPath)
+					@tree.addFile(file, newPath)
+					getStatus()	
+				end
 			end
 		rescue Exception => e
+			Logger::log( (@proyecto.nombre() == nil)? "": @proyecto.nombre(), Logger::ERROR,e.message())			
 			Qt::MessageBox::critical(self,tr('DRubox'),tr("Error al agregar el archivo"))
-			@tree.refresh() if(@tree!=nil)
+			refreshTree()
 		end
 	end
 
 	def addFolder()
 		begin	
 			newPath = @tree.getSelectedFolder()
-			@folder = Qt::FileDialog::getExistingDirectory(self,"Seleccione las carpetas a agregar","/home",Qt::FileDialog::ShowDirsOnly)
-			if(@folder!=nil)		
-				added = @proyecto.addFolder(@folder, newPath) 
-				if added
-					@tree.addFolder(@folder, newPath)
+			folder = Qt::FileDialog::getExistingDirectory(self,"Seleccione las carpetas a agregar","/home",Qt::FileDialog::ShowDirsOnly)
+			if(folder!=nil)		
+				yaExiste = @proyecto.fileExists?(folder, newPath)		
+				if yaExiste		
+					op = Qt::MessageBox::warning(self,tr('DRubox'),tr("La carpeta ya existe, desea reemplazarla?"),Qt::MessageBox::Yes | Qt::MessageBox::No)
+					if (op==Qt::MessageBox::Yes)
+						@proyecto.addFolder(folder, newPath)
+						refreshTree()
+					end	
 				else
-					Qt::MessageBox::warning(self,tr('DRubox'),tr("La carpeta no fue agregada porque ya existe"))
+					@proyecto.addFolder(folder, newPath) 
+					@tree.addFolder(folder, newPath)
+					getStatus()
 				end
 			end
 		rescue Exception => e
+			Logger::log( (@proyecto.nombre() == nil)? "": @proyecto.nombre(), Logger::ERROR,e.message())			
 			Qt::MessageBox::critical(self,tr('DRubox'),tr("Error al agregar la carpeta"))
-			@tree.refresh() if(@tree!=nil)
+			refreshTree()
 		end
 	end
 
@@ -275,8 +288,9 @@ class DRuboxWindow < Qt::MainWindow
 			rm_path = @tree.removeSelectedItem()
 			@proyecto.remove(rm_path) if(rm_path!=nil)
 		rescue Exception => e
+			Logger::log( (@proyecto.nombre() == nil)? "": @proyecto.nombre(), Logger::ERROR,e.message())			
 			Qt::MessageBox::critical(self,tr('DRubox'),tr("Error al eliminar el archivo o carpeta"))
-			@tree.refresh() if(@tree!=nil)
+			refreshTree()
 		end
 	end
 
@@ -287,7 +301,7 @@ class DRuboxWindow < Qt::MainWindow
 		puts @ok	
 		if !cambios or @ok
 			@proyecto.upload(msg)
-			@tree.refresh()
+			refreshTree()
 		end
 		rescue CommitException, DownloadException, UploadException  => e
 			Logger::log( (@proyecto.nombre() == nil)? "": @proyecto.nombre(), Logger::ERROR,e.message())
@@ -305,7 +319,7 @@ class DRuboxWindow < Qt::MainWindow
 		puts @ok	
 		if !cambios or @ok
 			@proyecto.download(msg)
-			@tree.refresh()
+			refreshTree()
 		end
 		rescue CommitException, DownloadException  => e
 			Logger::log( (@proyecto.nombre() == nil)? "": @proyecto.nombre(), Logger::ERROR,e.message())
@@ -317,24 +331,39 @@ class DRuboxWindow < Qt::MainWindow
 	end
 
 	def timeMachine()
-		path = @tree.getSelectedFile()
-		puts path
-		if(path!=nil)
-			commits = @proyecto.getFileCommits(path)	
-			timeMachineDialog = TimeMachineDialog.new(path, commits, self)
-			if(timeMachineDialog.exec()==Qt::Dialog::Accepted)
-				newFileName = timeMachineDialog.getNewFileName()				
-				@proyecto.recuperarArchivo(path, newFileName , timeMachineDialog.getSelectedSha())
-				#@tree.addFile([newFileName], nil)
-				@tree.refresh()
+		begin			
+			path = @tree.getSelectedFile()
+			if(path!=nil)
+				commits = @proyecto.getFileCommits(path)	
+				if (commits!=nil)				
+					timeMachineDialog = TimeMachineDialog.new(path, commits, self)
+					if(timeMachineDialog.exec()==Qt::Dialog::Accepted)
+						newFileName = timeMachineDialog.getNewFileName()				
+						@proyecto.recuperarArchivo(path, newFileName , timeMachineDialog.getSelectedSha())
+						#@tree.addFile([newFileName], nil)
+						refreshTree()
+					end
+				else
+					Qt::MessageBox::information(self,tr('DRubox'),tr("No se encontraron versiones anteriores del archivo"))		
+				end
 			end
+		rescue GetCommitsException => e
+			Logger::log( (@proyecto.nombre() == nil)? "": @proyecto.nombre(), Logger::ERROR,e.message())
+			Qt::MessageBox::critical(self,tr('DRubox'),tr(e.message()))	
+		rescue Exception => e
+			Logger::log( (@proyecto.nombre() == nil)? "": @proyecto.nombre(), Logger::ERROR,e.message())
+			Qt::MessageBox::critical(self,tr('DRubox'),tr("Error al obtener las versiones anteriores del archivo"))	
 		end
-		
 	end
 
 	def getStatus()
 		status = @proyecto.status()
-		@tree.updateStatus(status) if(status!=nil)
+		@tree.updateStatus(status) if (@tree!=nil) and (status!=nil)
+	end
+
+	def refreshTree()
+		getStatus()
+		@tree.refresh() if (@tree!=nil)
 	end
 
 end #class

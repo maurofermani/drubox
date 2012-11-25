@@ -8,7 +8,7 @@ class TimeMachineDialog < Qt::Dialog
 		@list = Qt::ListWidget.new(self)
 
 		@arr_commits = Array.new()		
-		
+	
 		commits.each{ |c|
 			@arr_commits.push({ "sha" => c.sha(), "author" => c.author.name()+" <"+c.author.email+">", "message" => c.message(), "a_date" => c.author_date, "c_date" => c.committer_date })
 			@list.addItem(c.message())

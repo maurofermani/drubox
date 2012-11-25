@@ -120,20 +120,26 @@ class Proyecto
 		@project_path
 	end
 
+	def fileExists?(file, newPath = nil)
+		path = (newPath == nil)? @project_path : newPath["path"]
+		File.exists?(path+"/"+File.basename(file))
+	end
+
 	def addFile(file, newPath = nil)
 		path = (newPath == nil)? @project_path : newPath["path"]		
-		if(added = !File.exists?(path+"/"+File.basename(file)))		
-			FileUtils.cp(file, path+"/"+File.basename(file))
-		end
-		return added
+		FileUtils.cp(file, path+"/"+File.basename(file))
 	end
 
 	def addFolder(folder, newPath = nil)
+		puts "folder: "+folder
+		puts "newPath: "+newPath["path"] if (newPath!=nil)
+
 		path = (newPath == nil)? @project_path : newPath["path"]
-		if(added = !File.exists?(path+"/"+File.basename(folder)))
-			FileUtils.cp_r(folder, path+"/"+File.basename(folder))
-		end
-		return added
+
+		puts "dest_path: "+path
+		puts "final_path: "+path+"/"+File.basename(folder)
+		#FileUtils.cp_r(folder, path+"/"+File.basename(folder))
+		FileUtils.cp_r(folder, path)
 	end
 
 	def remove(rm_path)
@@ -206,7 +212,18 @@ class Proyecto
 	end
 
 	def getFileCommits(path)
-		@git.log().object(path)
+		commits = nil
+		begin		
+			first_commit = @git.log().first()		
+			commits = @git.log().object(path)
+		rescue Git::GitExecuteError => e
+			if(e.to_s.include?("bad default revision"))
+				Logger.log(@carpeta,Logger::INFO,"Error en git log (no hay primer commit)")		
+			else
+				raise GetCommitsException, "Error al obtener la versiones anteriores del archivo", caller
+			end
+		end
+		return commits
 	end
 
 	def recuperarArchivo(path, newFileName, sha)	
