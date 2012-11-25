@@ -41,44 +41,6 @@ class RuboxTree < Qt::TreeWidget
 		end
 	end
 
-	def addFile(file, newPath = nil)
-		
-		path = (newPath==nil)? @path : newPath["path"]
-		
-		file = path+"/"+File.basename(file)
-
-		item = Qt::TreeWidgetItem.new()
-		item.setText(0, File.basename(file))
-		item.setText(1, "")
-		item.setText(2, (File.size(file).to_s + ' bytes'))
-		item.setText(3, file)
-		item.setText(4, File.mtime(file).strftime("%Y-%m-%d %I:%M:%S %p"))
-		item.setIcon(0, Qt::Icon.new(FILE_ICON_PATH))
-		if (newPath==nil)
-			addTopLevelItem(item)
-		else
-			 newPath["item"].insertChild(newPath["item"].childCount, item)
-		end	
-		
-	end
-
-	def addFolder(folderPath, newPath = nil)
-		folder = (newPath==nil)? @path+"/"+File.basename(folderPath) : newPath["path"]+"/"+File.basename(folderPath)
-
-		folder_item = Qt::TreeWidgetItem.new()
-		folder_item.setText(0, File.basename(folder))
-		folder_item.setText(1, "")
-		folder_item.setText(2, (File.size(folder).to_s + ' bytes'))
-		folder_item.setText(3, folder )
-		folder_item.setText(4, File.mtime(folder).strftime("%Y-%m-%d %I:%M:%S %p"))
-		folder_item.setIcon(0, Qt::Icon.new(FOLDER_ICON_PATH))
-		if (newPath==nil)
-			addTopLevelItem(folder_item)
-		else
-			 newPath["item"].insertChild(newPath["item"].childCount, folder_item)
-		end		
-		populate(self,folder,folder_item)
-	end
 
 	def removeSelectedItem()
 		item = selectedItems()

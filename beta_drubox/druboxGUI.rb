@@ -4,7 +4,6 @@ require './loginDialog.rb'
 require './timeMachineDialog.rb'
 require './truecryptOptionsDialog.rb'
 require './usuario.rb'
-require './exceptions/openProjectException.rb'
 require './exceptions/uploadException.rb'
 require './exceptions/downloadException.rb'
 require './exceptions/cloneProjectException.rb'
@@ -275,17 +274,15 @@ class DRuboxGUI < Qt::MainWindow
 					op = Qt::MessageBox::warning(self,tr('DRubox'),tr("El archivo ya existe, desea reemplazarlo?"),Qt::MessageBox::Yes | Qt::MessageBox::No)
 					if (op==Qt::MessageBox::Yes)
 						@proyecto.addFile(file, newPath)
-						refreshTree()
 					end
 				else
 					@proyecto.addFile(file, newPath)
-					@tree.addFile(file, newPath)
-					getStatus()	
 				end
 			end
 		rescue Exception => e
 			Logger::log( (@proyecto == nil or @proyecto.nombre() == nil)? "": @proyecto.nombre(), Logger::ERROR,e.message())			
 			Qt::MessageBox::critical(self,tr('DRubox'),tr("Error al agregar el archivo"))
+		ensure
 			refreshTree()
 		end
 	end
@@ -300,17 +297,15 @@ class DRuboxGUI < Qt::MainWindow
 					op = Qt::MessageBox::warning(self,tr('DRubox'),tr("La carpeta ya existe, desea reemplazarla?"),Qt::MessageBox::Yes | Qt::MessageBox::No)
 					if (op==Qt::MessageBox::Yes)
 						@proyecto.addFolder(folder, newPath)
-						refreshTree()
 					end	
 				else
 					@proyecto.addFolder(folder, newPath) 
-					@tree.addFolder(folder, newPath)
-					getStatus()
 				end
 			end
 		rescue Exception => e
 			Logger::log( (@proyecto == nil or @proyecto.nombre() == nil)? "": @proyecto.nombre(), Logger::ERROR,e.message())			
 			Qt::MessageBox::critical(self,tr('DRubox'),tr("Error al agregar la carpeta"))
+		ensure		
 			refreshTree()
 		end
 	end
@@ -319,45 +314,40 @@ class DRuboxGUI < Qt::MainWindow
 		begin				
 			rm_path = @tree.removeSelectedItem()
 			@proyecto.remove(rm_path) if(rm_path!=nil)
-			getStatus()
 		rescue Exception => e
 			Logger::log( (@proyecto == nil or @proyecto.nombre() == nil)? "": @proyecto.nombre(), Logger::ERROR,e.message())			
 			Qt::MessageBox::critical(self,tr('DRubox'),tr("Error al eliminar el archivo o carpeta"))
+		ensure		
 			refreshTree()
 		end
 	end
 
 	def upload()
 		begin
-		cambios = @proyecto.hayCambios?
-                if (cambios)
-                        ok = Qt::Boolean.new
-                        msg = Qt::InputDialog::getText(self,tr("Mensaje"),
-                                tr("Mensaje de los cambios"),
-                                Qt::LineEdit::Normal, "", ok)
-                        if !ok.nil?
-                                if msg!= nil and !msg.empty?
-                                        @proyecto.upload(msg)
-                                        refreshTree()
-                                        Qt::MessageBox::information(self,tr('DRubox'),
-                                                tr("Cambios subidos correctamente."))
-                                else
-                                        Qt::MessageBox::information(self,tr('DRubox'),
-                                                tr("Ingrese un mensaje para los cambios."))
-                                end
-                        end
-                else
-                        @proyecto.upload("")
-                        refreshTree()
-                        Qt::MessageBox::information(self,tr('DRubox'),
-                                tr("Cambios subidos correctamente."))
-                end
+			cambios = @proyecto.hayCambios?
+			if (cambios)
+				ok = Qt::Boolean.new
+				msg = Qt::InputDialog::getText(self,tr("Mensaje"), tr("Mensaje de los cambios"), Qt::LineEdit::Normal, "", ok)
+				if !ok.nil?
+					if msg!= nil and !msg.empty?
+						@proyecto.upload(msg)
+						Qt::MessageBox::information(self,tr('DRubox'), tr("Cambios subidos correctamente."))
+					else
+						Qt::MessageBox::information(self,tr('DRubox'), tr("Ingrese un mensaje para los cambios."))
+					end
+				end
+			else
+				@proyecto.upload("")
+				Qt::MessageBox::information(self,tr('DRubox'), tr("Cambios subidos correctamente."))
+			end
 		rescue CommitException, DownloadException, UploadException  => e
 			Logger::log( (@proyecto == nil or @proyecto.nombre() == nil)? "": @proyecto.nombre(), Logger::ERROR,e.message())
 			Qt::MessageBox::critical(self,tr('DRubox'),tr(e.message()))
 		rescue Exception => e
 			Logger::log( (@proyecto == nil or @proyecto.nombre() == nil)? "": @proyecto.nombre(), Logger::ERROR,e.message())
 			Qt::MessageBox::critical(self,tr('DRubox'),tr("Error al subir los cambios al servidor"))			
+		ensure		
+			refreshTree()
 		end
 	end
 
@@ -372,7 +362,7 @@ class DRuboxGUI < Qt::MainWindow
 			if !ok.nil?
 				if msg!= nil and !msg.empty?
 					@proyecto.download(msg)
-					refreshTree()
+					
 					Qt::MessageBox::information(self,tr('DRubox'),
 						tr("Cambios descargados correctamente."))
 				else
@@ -382,7 +372,6 @@ class DRuboxGUI < Qt::MainWindow
 			end
 		else
 			@proyecto.download("")
-			refreshTree()
 			Qt::MessageBox::information(self,tr('DRubox'),
 				tr("Cambios descargados correctamente."))
 		end
@@ -392,6 +381,8 @@ class DRuboxGUI < Qt::MainWindow
 		rescue  Exception => e	
 			Logger::log( (@proyecto == nil or @proyecto.nombre() == nil)? "": @proyecto.nombre(), Logger::ERROR,e.message())
 			Qt::MessageBox::critical(self,tr('DRubox'),tr("Error al descargar los cambios desde el servidor"))
+		ensure		
+			refreshTree()	
 		end
 	end
 
@@ -405,8 +396,6 @@ class DRuboxGUI < Qt::MainWindow
 					if(timeMachineDialog.exec()==Qt::Dialog::Accepted)
 						newFileName = timeMachineDialog.getNewFileName()				
 						@proyecto.recuperarArchivo(path, newFileName , timeMachineDialog.getSelectedSha())
-						#@tree.addFile([newFileName], nil)
-						refreshTree()
 					end
 				else
 					Qt::MessageBox::information(self,tr('DRubox'),tr("No se encontraron versiones anteriores del archivo"))		
@@ -418,17 +407,21 @@ class DRuboxGUI < Qt::MainWindow
 		rescue Exception => e
 			Logger::log( (@proyecto == nil or @proyecto.nombre() == nil)? "": @proyecto.nombre(), Logger::ERROR,e.message())
 			Qt::MessageBox::critical(self,tr('DRubox'),tr("Error al obtener las versiones anteriores del archivo"))	
+		ensure		
+			refreshTree()
 		end
 	end
 
 	def getStatus()
-		status = @proyecto.status()
-		if(status!=nil)
-			@tree.updateStatus(status)  if(@tree!=nil) 
-		else
-			untrackedFiles = @proyecto.noCommitStatus()
-			@tree.updateNoCommitStatus(untrackedFiles) if(@tree!=nil) 
-		end 
+		if (@proyecto!=nil) and (@tree!=nil) 
+			status = @proyecto.status() 
+			if(status!=nil)
+				@tree.updateStatus(status)   
+			else
+				untrackedFiles = @proyecto.noCommitStatus() 
+				@tree.updateNoCommitStatus(untrackedFiles) 
+			end
+		end
 	end
 
 	def refreshTree()

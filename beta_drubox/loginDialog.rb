@@ -46,7 +46,6 @@ class LoginDialog < Qt::Dialog
 	end
 
 	def loginClicked()
-		puts "login clicked"
 		accept()
 	end
 
