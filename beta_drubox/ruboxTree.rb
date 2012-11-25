@@ -19,7 +19,7 @@ class RuboxTree < Qt::TreeWidget
 
 	def initialize (parent = nil, path)
 		super(parent)
-		setHeaderLabels(['File Name', 'Last Modified', 'Size', 'Path','State'])
+		setHeaderLabels(["Nombre", "Estado", "Tamano", "","Fecha Modificacion"])
 		5.times{ |i| header().setResizeMode(i,Qt::HeaderView::ResizeToContents) }
 		
 		#g = Git.init(FOLDER_PATH)
@@ -41,9 +41,10 @@ class RuboxTree < Qt::TreeWidget
 			#fill item information
 			item = Qt::TreeWidgetItem.new()
 			item.setText(0, File.basename(file))
-			item.setText(1, File.mtime(file).strftime("%Y-%m-%d %I:%M:%S %p"))
+			item.setText(1, "") #status se inicializa con el evento
 			item.setText(2, (File.size(file).to_s + ' bytes'))
 			item.setText(3, file)
+			item.setText(4, File.mtime(file).strftime("%Y-%m-%d %I:%M:%S %p"))
 
 			if ( File.ftype(file)=="file")
 				item.setIcon(0, Qt::Icon.new(FILE_ICON_PATH) )
@@ -72,9 +73,10 @@ class RuboxTree < Qt::TreeWidget
 
 		item = Qt::TreeWidgetItem.new()
 		item.setText(0, File.basename(file))
-		item.setText(1, File.mtime(file).strftime("%Y-%m-%d %I:%M:%S %p"))
+		item.setText(1, "")
 		item.setText(2, (File.size(file).to_s + ' bytes'))
 		item.setText(3, file)
+		item.setText(4, File.mtime(file).strftime("%Y-%m-%d %I:%M:%S %p"))
 		item.setIcon(0, Qt::Icon.new(FILE_ICON_PATH))
 		if (newPath==nil)
 			addTopLevelItem(item)
@@ -89,9 +91,10 @@ class RuboxTree < Qt::TreeWidget
 
 		folder_item = Qt::TreeWidgetItem.new()
 		folder_item.setText(0, File.basename(folder))
-		folder_item.setText(1, File.mtime(folder).strftime("%Y-%m-%d %I:%M:%S %p"))
+		folder_item.setText(1, "")
 		folder_item.setText(2, (File.size(folder).to_s + ' bytes'))
 		folder_item.setText(3, folder )
+		folder_item.setText(4, File.mtime(folder).strftime("%Y-%m-%d %I:%M:%S %p"))
 		folder_item.setIcon(0, Qt::Icon.new(FOLDER_ICON_PATH))
 		if (newPath==nil)
 			addTopLevelItem(folder_item)
@@ -164,8 +167,8 @@ class RuboxTree < Qt::TreeWidget
 				puts "1: "+filePath
 				puts "2: "+i.text(3)
 				if(i.text(3)==filePath)
-					i.setText(4, statusText)
-					i.setIcon(4, Qt::Icon.new(iconPath))		
+					i.setText(1, statusText)
+					i.setIcon(1, Qt::Icon.new(iconPath))		
 				end
 			}	
 		}
@@ -213,8 +216,8 @@ class RuboxTree < Qt::TreeWidget
 				item.setText(0, splitPath[splitPath.length-1])
 				item.setIcon(0, Qt::Icon.new(FILE_ICON_PATH))				
 				item.setText(3, parent_path+"/")
-				item.setText(4, statusText)
-				item.setIcon(4, Qt::Icon.new(iconPath))
+				item.setText(1, statusText)
+				item.setIcon(1, Qt::Icon.new(iconPath))
 				if(parent==nil)
 					addTopLevelItem(item)
 				else
@@ -225,8 +228,8 @@ class RuboxTree < Qt::TreeWidget
 					puts "1: "+filePath
 					puts "2: "+it.text(3)
 					if(it.text(3)==filePath)
-						it.setText(4, statusText)
-						it.setIcon(4, Qt::Icon.new(iconPath))		
+						it.setText(1, statusText)
+						it.setIcon(1, Qt::Icon.new(iconPath))		
 					end
 				}
 			end	

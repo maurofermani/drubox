@@ -11,7 +11,7 @@ class Logger
 	@@druboxFolder = Dir.mkdir(DRUBOX_FOLDER) if(!File.directory?(DRUBOX_FOLDER))
 	@@logFile = File.open(DRUBOX_FOLDER + "/.client.log", "a")
 
-	def self.log(message)
+	def self.logMessage(message)
 		str =  "-------------------------------------------------\n"
 		str += "[" + Time.new.to_s + "] "
 		str += ENV["user"] == nil ? "Sin usuario" : "Usuario: " + ENV["user"]
@@ -21,7 +21,7 @@ class Logger
 		@@logFile.flush
 	end
 
-	def self.log(project, level = INFO, message)
+	def self.log(project, level, message)
 		str =  "-------------------------------------------------\n"
 		str += "[" + Time.new.to_s + "] "
 		str += ENV["user"] == nil ? "Sin usuario" : "Usuario: " + ENV["user"]
