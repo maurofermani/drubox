@@ -11,6 +11,7 @@ require './exceptions/cloneProjectException.rb'
 require './exceptions/commitException.rb'
 require './exceptions/getCommitsException.rb'
 require './exceptions/serverException.rb'
+require './exceptions/truecryptException.rb'
 require './logger/logger.rb'
 require './config/yml.rb'
 
@@ -150,6 +151,7 @@ class DRuboxWindow < Qt::MainWindow
 	end
 
 	def login()
+		begin
 		if(@usuario == nil)
 			loginDialog = LoginDialog.new(self)
 			if(loginDialog.exec()==Qt::Dialog::Accepted)
@@ -192,18 +194,37 @@ class DRuboxWindow < Qt::MainWindow
 				end
 			end
 		end
+		rescue TruecryptException => e
+			Logger::log( (@proyecto.nombre() == nil)? "": @proyecto.nombre(),Logger::ERROR,e.message())
+			Qt::MessageBox::critical(self,tr('DRubox'),tr(e.message()))
+		rescue ServerException => e
+			Logger::log( (@proyecto.nombre() == nil)? "": @proyecto.nombre(),Logger::ERROR,e.message())
+			Qt::MessageBox::critical(self,tr('DRubox'),tr(e.message()))
+		rescue Exception => e
+			Logger::log( (@proyecto.nombre() == nil)? "": @proyecto.nombre(),Logger::ERROR,e.message())
+			Qt::MessageBox::critical(self,tr('DRubox'),tr("Error al loguearse"))
+		end
 	end
 
 	def logout()
-		@usuario.cerrarSesion() if(@usuario != nil)
-		@usuario = nil
-		@proyecto = nil
-		@tree.clear() if(@tree != nil)
-		@tree = nil
-		@projectCombo.clear() if(@projectCombo != nil)
-		@currentIndex = 0
-		enableActions(false)
-		ENV["user"] = nil
+		begin
+			@usuario.cerrarSesion() if(@usuario != nil)
+		rescue TruecryptException => e
+			Logger::log( (@proyecto.nombre() == nil)? "": @proyecto.nombre(), Logger::ERROR,e.message())
+			Qt::MessageBox::warning(self,tr('DRubox'),tr(e.message()))
+		rescue Exception => e
+			Logger::log( (@proyecto.nombre() == nil)? "": @proyecto.nombre(), Logger::ERROR,e.message())
+			Qt::MessageBox::critical(self,tr('DRubox'),tr("Error de conexion al servidor"))
+		ensure
+			@usuario = nil
+			@proyecto = nil
+			@tree.clear() if(@tree != nil)
+			@tree = nil
+			@projectCombo.clear() if(@projectCombo != nil)
+			@currentIndex = 0
+			enableActions(false)
+			ENV["user"] = nil
+		end
 	end
 
 	def quitDrubox()

@@ -19,7 +19,7 @@ class RuboxTree < Qt::TreeWidget
 
 	def initialize (parent = nil, path)
 		super(parent)
-		setHeaderLabels(["Nombre", "Estado", "Tamano", "","Fecha Modificacion"])
+		setHeaderLabels(["Nombre", "Estado", "Tama\u00f1o", "","Fecha Modificacion"])
 		5.times{ |i| header().setResizeMode(i,Qt::HeaderView::ResizeToContents) }
 		
 		#g = Git.init(FOLDER_PATH)
