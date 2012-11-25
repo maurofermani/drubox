@@ -361,12 +361,17 @@ class DRuboxWindow < Qt::MainWindow
 
 	def getStatus()
 		status = @proyecto.status()
-		@tree.updateStatus(status) if (@tree!=nil) and (status!=nil)
+		if(status!=nil)
+			@tree.updateStatus(status)  if(@tree!=nil) 
+		else
+			untrackedFiles = @proyecto.noCommitStatus()
+			@tree.updateNoCommitStatus(untrackedFiles) if(@tree!=nil) 
+		end 
 	end
 
 	def refreshTree()
-		getStatus()
 		@tree.refresh() if (@tree!=nil)
+		getStatus()
 	end
 
 end #class

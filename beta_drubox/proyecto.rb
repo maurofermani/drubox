@@ -161,6 +161,23 @@ class Proyecto
 		end
 	end
 
+	def noCommitStatus()
+		untrackedFiles = Array.new()		
+		findFiles(@project_path, untrackedFiles)
+		return untrackedFiles
+	end
+
+	def findFiles(path, files)
+		Dir["#{path}/*"].each{ |f|
+			if(File.ftype(f)!='directory')
+				files.push(f)
+			else
+				findFiles(f, files)
+			end
+		}
+	end
+
+
 	def stageFiles()
 		begin
 			first_commit = @git.log().first()

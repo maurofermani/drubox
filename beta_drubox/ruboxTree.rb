@@ -233,6 +233,19 @@ class RuboxTree < Qt::TreeWidget
 		}
 	end
 
+	def updateNoCommitStatus(untracked)
+		untracked.each{ |u|
+			items = findItems(u, Qt::MatchCaseSensitive|Qt::MatchRecursive,3)
+			items.each{ |it|
+				if(it.text(3)==u)
+					it.setText(4, "Untracked")
+					it.setIcon(4, Qt::Icon.new("./images/status_added.png"))		
+				end
+			}	
+		}
+		
+	end
+
 	def updateStatus(status)
 		updateStatusIcons(status.untracked, "./images/status_added.png", "Untracked")
 		updateStatusIcons(status.changed, "./images/status_changed.png", "Changed")
