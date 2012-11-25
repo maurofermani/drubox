@@ -36,8 +36,8 @@ class Usuario
 	end
 
 	def cerrarSesion()
-		ServerInterface::cerrarSesion(@cookie)
 		TruecryptInterface::unmountVolume(@login)
+		ServerInterface::cerrarSesion(@cookie)
 	end
 
 	def cargarProyectos()

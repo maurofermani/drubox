@@ -19,7 +19,7 @@ require './config/yml.rb'
 
 class DRuboxGUI < Qt::MainWindow
 
-	slots 'login()', 'projectSelected(int)','addFile()','addFolder()','remove()','upload()','download()','timeMachine()','logout()','quitDrubox()','getStatus()'
+	slots 'login()', 'projectSelected(int)','addFile()','addFolder()','remove()','upload()','download()','timeMachine()','logout()','quitDrubox()','refreshTree()'
 
 	def initialize(parent = nil)
 		super(parent)		
@@ -36,6 +36,11 @@ class DRuboxGUI < Qt::MainWindow
 		
 		resize(800,400)
 		move(300,300)
+	end
+
+	def closeEvent(event)
+		super(event)
+		quitDrubox()
 	end
 
 	def createActions()
@@ -87,7 +92,7 @@ class DRuboxGUI < Qt::MainWindow
 		@statusAction = Qt::Action.new(tr("&Status"),self)
 		@statusAction.setIcon(Qt::Icon.new('./images/status.png'))
 		@statusAction.setStatusTip(tr("Obtener status de los archivos..."))
-		connect(@statusAction,SIGNAL('triggered()'),self,SLOT('getStatus()'))		
+		connect(@statusAction,SIGNAL('triggered()'),self,SLOT('refreshTree()'))		
 
 		enableActions(false)
 	end
