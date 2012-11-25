@@ -2,6 +2,10 @@
 
 class Logger
 	
+	ERROR = "Error"
+	WARNING = "Warning"
+	INFO = "Info"
+
 	LOG_HOME = ENV["HOME"]+"/Rubox/" + "p"
 	@@logFile = File.open(LOG_HOME + "/.client.log", "a")
 
@@ -13,20 +17,12 @@ class Logger
 		@@logFile.flush
 	end
 
-	def self.log(project, level = 3, message)
-		case level
-		when 1
-			str_level = "Error"
-		when 2
-			str_level = "Warning"
-		when 3
-			str_level = "Info"
-		end
-
+	def self.log(project, level = @@INFO, message)
 		str =  "-------------------------------------------------\n"
 		str += "[" + Time.new.to_s + "]\n"
-		str += project + " -> " + str_level + ": " + message + "\n"
+		str += project + " -> " + level + ": " + message + "\n"
 		@@logFile.puts(str)
 		@@logFile.flush	
 	end
+
 end

@@ -7,6 +7,8 @@ require './usuario.rb'
 require './exceptions/openProjectException.rb'
 require './exceptions/uploadException.rb'
 require './exceptions/downloadException.rb'
+require './exceptions/cloneProjectException.rb'
+require './exceptions/commitException.rb'
 require './logger/logger.rb'
 require './config/yml.rb'
 
@@ -214,6 +216,12 @@ class DRuboxWindow < Qt::MainWindow
 				@proyecto = @usuario.getCurrentProject()
 				enableActions(true, @proyecto.accessType())
 			end
+		rescue CloneProjectException => e
+			@tree.clear() if(@tree!=nil)
+			@projectCombo.setCurrentIndex(0) if(@projectCombo!=nil) and (@projectCombo.count()>0)
+			@currentIndex = 0			
+			enableActions(false)
+			Qt::MessageBox::critical(self,tr('DRubox'),tr(e.message()))
 		rescue Exception => e
 			#error al abrir el proyecto
 			@tree.clear() if(@tree!=nil)
@@ -274,21 +282,36 @@ class DRuboxWindow < Qt::MainWindow
 
 	def upload()
 		begin
-		msg = (@proyecto.hayCambios?)? Qt::InputDialog::getText(self,tr("Mensaje"),tr("Commit Message"),Qt::LineEdit::Normal, "", @ok) : ""
-		@proyecto.upload(msg)
-		@tree.refresh()
+		cambios = @proyecto.hayCambios?
+		msg = (cambios)? Qt::InputDialog::getText(self,tr("Mensaje"),tr("Commit Message"),Qt::LineEdit::Normal, "", @ok) : ""
+		puts @ok	
+		if !cambios or @ok
+			@proyecto.upload(msg)
+			@tree.refresh()
+		end
+		rescue CommitException, DownloadException, UploadException  => e
+			Logger::log( (@proyecto.nombre() == nil)? "": @proyecto.nombre(), Logger::ERROR,e.message())
+			Qt::MessageBox::critical(self,tr('DRubox'),tr(e.message()))
 		rescue Exception => e
-			Qt::MessageBox::critical(self,tr('DRubox'),tr("Error al subir los cambios al servidor"))	
+			Logger::log( (@proyecto.nombre() == nil)? "": @proyecto.nombre(), Logger::ERROR,e.message())
+			Qt::MessageBox::critical(self,tr('DRubox'),tr("Error al subir los cambios al servidor"))			
 		end
 	end
 
 	def download()
 		begin
-		msg = (@proyecto.hayCambios?)? Qt::InputDialog::getText(self,tr("Mensaje"),tr("Commit Message"),Qt::LineEdit::Normal, "", @ok) : ""	
-		@proyecto.download(msg)
-		@tree.refresh()
-		rescue  Exception => e
-			puts e.to_s
+		cambios = @proyecto.hayCambios?
+		msg = (cambios)? Qt::InputDialog::getText(self,tr("Mensaje"),tr("Commit Message"),Qt::LineEdit::Normal, "", @ok) : ""
+		puts @ok	
+		if !cambios or @ok
+			@proyecto.download(msg)
+			@tree.refresh()
+		end
+		rescue CommitException, DownloadException  => e
+			Logger::log( (@proyecto.nombre() == nil)? "": @proyecto.nombre(), Logger::ERROR,e.message())
+			Qt::MessageBox::critical(self,tr('DRubox'),tr(e.message()))
+		rescue  Exception => e	
+			Logger::log( (@proyecto.nombre() == nil)? "": @proyecto.nombre(), Logger::ERROR,e.message())
 			Qt::MessageBox::critical(self,tr('DRubox'),tr("Error al bajar los cambios desde el servidor"))
 		end
 	end

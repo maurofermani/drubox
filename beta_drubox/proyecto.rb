@@ -30,21 +30,19 @@ class Proyecto
 	def pull()
 
 		begin
-			puts "ooo"
 			@git.fetch('origin')
-		rescue Git::GitExecuteError => error_git 
-			puts "falla fetch\n"+error_git.to_s
+		rescue Git::GitExecuteError => e
+			puts "enter vacio"
 			raise DownloadException, "Error al bajar los cambios desde el servidor" , caller
 		else
 			begin	
 				merge_message = @git.gcommit('FETCH_HEAD').message
-				puts merge_message
 				@git.merge("origin/master","-m #{merge_message}: merge")
-			rescue Git::GitExecuteError => error_git 
-				if(error_git.to_s.include?("not something we can merge"))
-					puts "veeerr: "+error_git.to_s #no hay 1er commit 
-				else #hay conflicto :(				
-
+			rescue Git::GitExecuteError => e 
+				if(e.to_s.include?("not something we can merge")) or (e.to_s.include?("Not a valid object name FETCH_HEAD"))
+					Logger::log(@carpeta, Logger::INFO,"El repositorio esta vacio") 
+				elsif(e.to_s.include?("Automatic merge failed")) #hay conflicto				
+					
 					@git.each_conflict{ |f| 
 
 						ours_commit = @git.gcommit('ORIG_HEAD')
@@ -83,13 +81,23 @@ class Proyecto
 				
 					}
 					@git.commit("#{merge_message}: merge commit")
+				else				
+					raise DownloadException, "Error al bajar los cambios desde el servidor" , caller 
 				end
 			end
 		end
 	end
 
 	def push()
+		begin		
 		@git.push('origin','master')
+		rescue Git::GitExecuteError => e
+			if (e.to_s.include?("refspec master does not match any"))
+				Logger::log(@carpeta,Logger::INFO,"No hay cambios para subir al servidor")
+			else
+				raise UploadException, "Error al subir los cambios al servidor" , caller
+			end
+		end
 	end
 
 	def abrirProyecto()
@@ -97,22 +105,15 @@ class Proyecto
 		if(File.directory?(@project_path))
 			if(File.directory?(@project_path+"/.git"))
 				@git = Git.open(@project_path)
-				begin
-					@git.add_remote('origin',@server_project_path)
-					Logger.log(@carpeta,3,"Se agrego el remote origin = "+@server_project_path)	
-				rescue Git::GitExecuteError => error_git #remote ya creado
-					Logger.log(@carpeta,2,"El remote origin ya existe")	
-				end
 			else
-				puts "existe sin git "+@carpeta		
+				Logger::log(@carpeta,Logger::ERROR,"Carpeta creada sin el repositorio inicializado")	
 			end		
 		else
-			puts "no existe "+@carpeta
 			begin			
 			@git = Git.clone(@server_project_path,@carpeta,{:path => @user_projects_path})	
 			rescue Git::GitExecuteError => e
+				Logger::log(@carpeta,Logger::ERROR,"No se pudo clonar el proyecto")
 				raise CloneProjectException, "Error al clonar el proyecto", caller
-				Logger.log(@carpeta,1,"No se pudo clonar el proyecto")
 			end
 		end
 
@@ -135,16 +136,6 @@ class Proyecto
 		return added
 	end
 
-	def prepareAddFiles(files, path)
-		@prepareFiles = Array.new()
-		files.each{ |f|
-			newPath = @project_path+"/"+File.basename(f)
-			@prepareFiles.push({ "path" => f, "repetido" => File.exists?(newPath), "reemplazar" => false, "newPath" => newPath })
-		}
-		return @prepareFiles
-	end
-
-
 	def remove(rm_path)
 		# ver si hacer el git remove aca o dejarlo antes del sync como esta ahora
 		if(File.ftype(rm_path) == 'directory')
@@ -155,27 +146,18 @@ class Proyecto
 	end
 	
 	def status()
-		#@git.status.each{ |s|
-		#	puts "path: "+s.path.to_s
-		#	puts "type: "+s.type.to_s
-		#	puts "stage: "+s.stage.to_s
-		#	puts "untracked: "+s.untracked.to_s
-		#	puts "------------------"
-		#}
 		begin		
 			@git.status
-		rescue Git::GitExecuteError => error_git 
-			puts "error git status: "+error_git.to_s
+		rescue Git::GitExecuteError => e
+			Logger::log(@carpeta,Logger::WARNING,"Error en status (no hay primer commit)")
 			return nil
 		end
 	end
-
 
 	def stageFiles()
 		begin
 			first_commit = @git.log().first()
 		rescue	Git::GitExecuteError => error_git #no hay 1er commit	
-			puts error_git.to_s
 			Dir["#{@project_path}/*"].each{ |f|
 			 @git.add(f)
 			}
@@ -196,13 +178,13 @@ class Proyecto
 		
 		begin
 			@git.commit(commit_message) if hayCambios?
-		rescue Git::GitExecuteError => error_git #working dir clean?
-			if (error_git.to_s.include?("nothing to commit"))
-				puts "working directory clean"
+		rescue Git::GitExecuteError => e #working dir clean?
+			if (e.to_s.include?("nothing to commit"))
+				Logger.log(@carpeta,Logger::INFO,"No existen cambios en el working directory (Proyecto.download)")
 			else
-				puts error_git.to_s
+				raise CommitException, "Error al guardar los cambios", caller		
 			end
-		end	
+		end
 		pull()
 		push()
 	end
@@ -215,22 +197,12 @@ class Proyecto
 			@git.commit(commit_message) if hayCambios?
 		rescue Git::GitExecuteError => e #working dir clean?
 			if (e.to_s.include?("nothing to commit"))
-				Logger.log(@carpeta,3,"No existen cambios en el working directory (Proyecto.download)")
+				Logger.log(@carpeta,Logger::INFO,"No existen cambios en el working directory (Proyecto.download)")
 			else
-				
+				raise CommitException, "Error al guardar los cambios", caller		
 			end
 		end		
 		pull()
-	end
-
-	def refresh_old()
-		@git.diff("HEAD~1","HEAD").each{ |f|
-			if(f.type=="new") #new agregado
-				puts "agregar: "+f.path		
-			elsif(f.type=="deleted")  #deleted borrado
- 				puts "borrar: "+f.path	
-			end
-		}
 	end
 
 	def getFileCommits(path)
@@ -248,7 +220,13 @@ class Proyecto
 	end
 
 	def hayCambios?()
-		cambios = @git.status.added.length() + @git.status.changed.length() + @git.status.untracked.length() + @git.status.deleted.length()
+		begin
+			first_commit = @git.log().first()
+		rescue	Git::GitExecuteError => e #no hay 1er commit		
+			cambios = Dir["#{@project_path}/*"].size
+		else
+			cambios = @git.status.added.length() + @git.status.changed.length() + @git.status.untracked.length() + @git.status.deleted.length()
+		end
 		return cambios!=0 
 	end
 
