@@ -218,6 +218,7 @@ class DRuboxWindow < Qt::MainWindow
 				@tree = RuboxTree.new(nil,projectPath)
 				setCentralWidget(@tree)
 				@proyecto = @usuario.getCurrentProject()
+				getStatus()
 				enableActions(true, @proyecto.accessType())
 			end
 		rescue CloneProjectException => e
@@ -290,6 +291,7 @@ class DRuboxWindow < Qt::MainWindow
 		begin				
 			rm_path = @tree.removeSelectedItem()
 			@proyecto.remove(rm_path) if(rm_path!=nil)
+			getStatus()
 		rescue Exception => e
 			Logger::log( (@proyecto.nombre() == nil)? "": @proyecto.nombre(), Logger::ERROR,e.message())			
 			Qt::MessageBox::critical(self,tr('DRubox'),tr("Error al eliminar el archivo o carpeta"))

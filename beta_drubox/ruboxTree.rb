@@ -215,7 +215,7 @@ class RuboxTree < Qt::TreeWidget
 				item = Qt::TreeWidgetItem.new()
 				item.setText(0, splitPath[splitPath.length-1])
 				item.setIcon(0, Qt::Icon.new(FILE_ICON_PATH))				
-				item.setText(3, parent_path+"/")
+				item.setText(3, parent_path+"/"+splitPath[splitPath.length-1])
 				item.setText(1, statusText)
 				item.setIcon(1, Qt::Icon.new(iconPath))
 				if(parent==nil)
@@ -241,8 +241,8 @@ class RuboxTree < Qt::TreeWidget
 			items = findItems(u, Qt::MatchCaseSensitive|Qt::MatchRecursive,3)
 			items.each{ |it|
 				if(it.text(3)==u)
-					it.setText(4, "Untracked")
-					it.setIcon(4, Qt::Icon.new("./images/status_added.png"))		
+					it.setText(1, "")
+					it.setIcon(1, Qt::Icon.new("./images/status_added.png"))		
 				end
 			}	
 		}
@@ -250,10 +250,10 @@ class RuboxTree < Qt::TreeWidget
 	end
 
 	def updateStatus(status)
-		updateStatusIcons(status.untracked, "./images/status_added.png", "Untracked")
-		updateStatusIcons(status.changed, "./images/status_changed.png", "Changed")
-		updateStatusIcons(status.added, "./images/status_added.png", "Added")
-		updateStatusIconsDeleted(status.deleted, "./images/status_deleted.png", "Deleted")
+		updateStatusIcons(status.untracked, "./images/status_added.png", "")
+		updateStatusIcons(status.changed, "./images/status_changed.png", "")
+		updateStatusIcons(status.added, "./images/status_added.png", "")
+		updateStatusIconsDeleted(status.deleted, "./images/status_deleted.png", "")
 	end
 
 
