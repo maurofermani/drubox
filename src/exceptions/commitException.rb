@@ -1,0 +1,3 @@
+class CommitException < Exception
+
+end
