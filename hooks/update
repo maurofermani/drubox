@@ -1,21 +1,34 @@
-#!/usr/local/rvm/rubies/ruby-1.9.3-p194/bin/ruby
+#!/home/usuario/.rvm/rubies/ruby-1.9.3-p327/bin/ruby
 
-require "/home/fermani/workspace/rubox/config/environment"
 
 output = 0
 begin
-  
-  $stdout.reopen("./log/out.txt", "a")
-  $stderr.reopen("./log/err.txt", "a")
 
-  puts "-------------------------------------------------\n"
-  puts "[" + Time.new.to_s + "]\n"
-  #autor del commit
-  gitLog = `git log --pretty=' Autor: [%an] %n Commit: %H %n Mensaje: %s' -n 1`
+  $stdout.reopen("/tmp/out.txt", "a")
+  $stderr.reopen("/tmp/err.txt", "a")
+  
+  require "/home/usuario/workspace/rubox/config/environment"
+
+  pathLog = Dir.pwd + "/log"
+  Dir.mkdir(pathLog) if (!File.exists?(pathLog))
+  logFile = File.open(pathLog+"/out.log", "a")
+
+
+  logFile.puts "-------------------------------------------------\n"
+  logFile.puts "[" + Time.new.to_s + "] \n"
+  refname=ARGV[0]
+  oldrev=ARGV[1]
+  newrev=ARGV[2]
+  
+  #autor del commit y el mensaje del commit entrante
+  gitLog = `git show --pretty="Autor: %an%nCommit: %s" #{newrev} | sed -n 1,2p`
   #lo escribo en el log
-  puts gitLog.to_s
+  logFile.puts gitLog.to_s
   #obtengo el login. Formato: [<login>] <name>
-  login = gitLog[/\[(.*)\]/][1]
+  split = gitLog.split("\n")
+  split[0]["Autor: "] = ""
+  split[1]["Commit: "] = ""
+  login = split[0]
   #Obtengo el usuario de la base de datos
   user = User.where("login='" + login + "'").first
 
@@ -24,23 +37,24 @@ begin
   project = Project.where("name = '" + pName.to_s + "'").first
 
   if (user == nil || project == nil)
-    puts "Error de validacion de usuario y proyecto"
+    logFile.puts "Error de validacion de usuario y proyecto"
     output = 1
   else 
     pers = Permission.where("user_id = " + user.id.to_s + " and project_id = " + project.id.to_s).first
     if (pers == nil || pers.type.description == "read") 
-      puts "Error. El usuario no tiene permisos"
+      logFile.puts "Error. El usuario no tiene permisos"
       output = 1
     else 
-      puts "Cambios aceptados"
+      logFile.puts "Cambios aceptados"
     end
   end
 
 rescue Exception => e
   output = 1
-  #some error occur, dir not writable etc.
+  logFile.puts (e.message)
 ensure
-#  file.close unless file == nil
+  logFile.flush
+  logFile.close
 end
 
 
