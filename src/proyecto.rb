@@ -28,6 +28,9 @@ class Proyecto
 		@server_project_path = "git://" + SERVER_HOST + "/"+ @carpeta
 	end	
 
+	# Utiliza los comandos git-fetch y git-merge para descargar los cambios desde el repositorio central. 
+	# En caso de que existan conflictos al hacer el merge y el auto merge falle se conservan las diferentes 
+	# versiones de los archivos en conflicto.
 	def pull()
 
 		begin
@@ -88,6 +91,7 @@ class Proyecto
 		end
 	end
 
+	# Sube los cambios al repositorio central con el comando git-push
 	def push()
 		begin
 			@git.push('origin','master')
@@ -100,6 +104,10 @@ class Proyecto
 		end
 	end
 
+	# En caso de que el proyecto ya exista en el espacio de trabajo del usuario, se utiliza el método 
+	# open de la gema Git para crear el objeto que representa el respositorio local, que es utilizado 
+	# en el resto de los métodos de la clase Proyecto. En caso de que el proyecto no exista en el 
+	# espacio de trabajo del usuario se lo clona desde el servidor centrar utilizando el comando git-clone
 	def abrirProyecto()
 	
 		if(File.directory?(@project_path))
@@ -120,21 +128,26 @@ class Proyecto
 		@project_path
 	end
 
+	# Permite consultar si un archivo o carpeta existe dentro de la carpeta del proyecto. Se utiliza 
+	# desde DRuboxGUI para manejar el caso de agregar archivos o carpetas repetidos.
 	def fileExists?(file, newPath = nil)
 		path = (newPath == nil)? @project_path : newPath["path"]
 		File.exists?(path+"/"+File.basename(file))
 	end
 
+	# Copia un archivo específico dentro de la carpeta del proyecto. Si el archivo ya existe se reemplaza.
 	def addFile(file, newPath = nil)
 		path = (newPath == nil)? @project_path : newPath["path"]		
 		FileUtils.cp(file, path+"/"+File.basename(file))
 	end
 
+	# Copia una carpeta específica dentro de la carpeta del proyecto. Si la carpeta ya existe se reemplaza.
 	def addFolder(folder, newPath = nil)
 		path = (newPath == nil)? @project_path : newPath["path"]
 		FileUtils.cp_r(folder, path)
 	end
 
+	# Elimina de la carpeta del proyecto el archivo o carpeta especificado.
 	def remove(rm_path)
 		# ver si hacer el git remove aca o dejarlo antes del sync como esta ahora
 		if(File.ftype(rm_path) == 'directory')
@@ -144,6 +157,8 @@ class Proyecto
 		end
 	end
 	
+	# Utiliza el comando git-status para obtener para cada archivo del proyecto su estado en el repositorio 
+	# local. Los estados de un archivo son añadido, modificado o eliminado. 
 	def status()
 		begin		
 			@git.status
@@ -153,6 +168,8 @@ class Proyecto
 		end
 	end
 
+	# En caso de que el proyecto en el repositorio local no tenga ningún commit previo, este es el método 
+	# que se utiliza para obtener el estado de los archivos.
 	def noCommitStatus()
 		untrackedFiles = Array.new()		
 		findFiles(@project_path, untrackedFiles)
@@ -169,7 +186,8 @@ class Proyecto
 		}
 	end
 
-
+	# Utiliza el comando git-add para incluir los archivos con estado nuevo o modificado en el siguiente commit. 
+	# También utiliza el comando git-remove para excluir del siguiente commit los archivos con estado eliminado.
 	def stageFiles()
 		begin
 			first_commit = @git.log().first()
@@ -188,6 +206,9 @@ class Proyecto
 		end
 	end
 
+	# Es el método que se llama desde la interfaz gráfica DRuboxGUI para subir los cambios al servidor. 
+	# Se ejecutan los mismos pasos que en el caso del download y a continuación se invoca el método 
+	# push de la clase Proyecto.
 	def upload(commit_message)
 		
 		stageFiles()
@@ -206,6 +227,10 @@ class Proyecto
 		push()
 	end
 
+	# Es el método que se llama desde la interfaz gráfica DRuboxGUI para descargar los cambios desde el 
+	# servidor. Usa los métodos stageFiles y hayCambios? de la clase Proyecto. Si hay cambios en el 
+	# repositorio local se ejecuta el comando git-commit y finalmente se invoca el método pull de la clase 
+	# Proyecto.
 	def download(commit_message)
 	
 		stageFiles()
@@ -223,6 +248,8 @@ class Proyecto
 		pull()
 	end
 
+	# Para un archivo específico se obtienen todos los commits donde el archivo fue modificado. Es utilizado 
+	# desde la interfaz gráfica DRuboxGUI para obtener versiones anteriores de los archivos.
 	def getFileCommits(path)
 		commits = nil
 		begin		
@@ -238,14 +265,18 @@ class Proyecto
 		return commits
 	end
 
+	# Para un archivo y un commit específico, se obtiene una versión del archivo con el estado que tenía en ese 
+	# commit. Para eso utiliza el comando git-checkout. Primero se hace el checkout del archivo a la versión del 
+	# commit indicado. Se lo copia con otro nombre y se vuelve a hacer el checkout del archivo a la última versión.
 	def recuperarArchivo(path, newFileName, sha)	
-		# copiar el archivo rollbackeado con otro nombre, y hacerle un checkout al original al head para tener las 2 versiones...	
 		
 		@git.checkout_file(sha,path)
 		FileUtils.cp(path,newFileName)
 		@git.checkout_file("HEAD",path)
 	end
 
+	# Consulta si existen cambios en el repositorio local. Es utilizado en los métodos download y upload de 
+	# la clase Proyecto para determinar si es necesario ejecutar el comando git-commit.
 	def hayCambios?()
 		begin
 			first_commit = @git.log().first()

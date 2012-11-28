@@ -10,6 +10,9 @@ class TruecryptInterface
 		Dir.mkdir(DRUBOX_FOLDER+"/.hd") if(!File.directory?(DRUBOX_FOLDER+"/.hd"))
 	end
 
+	# Se usa desde la clase Usuario para crear un volumen encriptado dedicado al usuario, cuando el mismo 
+	# no dispone de un volumen creado previamente (por ejemplo, la primera vez que el usuario inicia sesión 
+	# en la máquina local).
 	def self.createVolume(login, pw, size = 10485760)
 		begin	
 			#crear volumen TC (DRUBOX_FOLDER+"/.hd/"+@username+".ci")) si no existe
@@ -39,6 +42,9 @@ class TruecryptInterface
 		File.exists?(cryptVol)
 	end
 
+	# Se utiliza en la clase Usuario para montar el volumen encriptado del usuario cuando se inicia la sesión, 
+	# haciendo que los proyectos almacenados en el volumen queden disponibles para operar sobre ellos, 
+	# principalmente desde la clase Proyecto
 	def self.mountVolume(login, pw)
 		begin	
 			mountPoint = DRUBOX_FOLDER+"/"+login
@@ -53,6 +59,8 @@ class TruecryptInterface
 		end
 	end
 
+	# Desmonta el volumen del usuario cuando se cierra la sesión por lo que los proyectos almacenados en el 
+	# volumen ya no pueden ser accedidos.
 	def self.unmountVolume(login)
 		begin	
 			cryptVol = DRUBOX_FOLDER+"/.hd/"+login+".ci"
