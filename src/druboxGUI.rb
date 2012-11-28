@@ -26,7 +26,6 @@ class DRuboxGUI < Qt::MainWindow
 		createMenus()
 		createStatusBar()
 		createToolBars()
-		
 		setWindowIcon(Qt::Icon.new('./images/ic32.png'))
 		setWindowTitle("Rubox - Aplicacion de Escritorio")
 
@@ -35,6 +34,14 @@ class DRuboxGUI < Qt::MainWindow
 		
 		resize(800,400)
 		move(300,300)
+		installEventFilter(self)
+	end
+
+	def eventFilter(obj, evt)
+		super(obj, evt)
+	       	if(evt.type()==Qt::Event::WindowActivate)
+			refreshTree()
+		end
 	end
 
 	def closeEvent(event)
