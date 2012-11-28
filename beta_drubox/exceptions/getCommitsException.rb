@@ -1,3 +1,0 @@
-class GetCommitsException < Exception
-
-end

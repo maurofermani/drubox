@@ -1,3 +1,0 @@
-class CloneProjectException < Exception
-
-end

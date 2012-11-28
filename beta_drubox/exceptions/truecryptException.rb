@@ -1,3 +1,0 @@
-class TruecryptException < Exception
-
-end

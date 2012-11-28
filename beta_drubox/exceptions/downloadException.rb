@@ -1,3 +1,0 @@
-class DownloadException < Exception
-
-end
