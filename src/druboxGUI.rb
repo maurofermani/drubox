@@ -394,7 +394,7 @@ class DRuboxGUI < Qt::MainWindow
 				if (commits!=nil)				
 					timeMachineDialog = TimeMachineDialog.new(path, commits, self)
 					if(timeMachineDialog.exec()==Qt::Dialog::Accepted)
-						newFileName = timeMachineDialog.getNewFileName()				
+						newFileName = timeMachineDialog.getFolder + "/" + timeMachineDialog.getNewFileName()
 						@proyecto.recuperarArchivo(path, newFileName , timeMachineDialog.getSelectedSha())
 					end
 				else

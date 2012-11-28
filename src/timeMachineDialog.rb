@@ -16,33 +16,29 @@ class TimeMachineDialog < Qt::Dialog
 			
 		@folder = File.dirname(file)
 		@extname = File.extname(file)	
-		@filename =	File.basename(file,@extname)
+		@filename = File.basename(file,@extname)
 
 		shaLabel = Qt::Label.new(tr("Sha:"))
-		authorLabel = Qt::Label.new(tr("Author:"))
-		authordateLabel = Qt::Label.new(tr("Author Date:"))
-		committerdateLabel = Qt::Label.new(tr("Commiter Date:"))
+		authorLabel = Qt::Label.new(tr("Autor:"))
+		committerdateLabel = Qt::Label.new(tr("Fecha y hora:"))
 
 		@csLabel = Qt::Label.new("")
 		@caLabel = Qt::Label.new("")
-		@cadLabel = Qt::Label.new("")
 		@ccdLabel = Qt::Label.new("")
 
 		infoLayout = Qt::GridLayout.new()
 
-		infoLayout.addWidget(Qt::Label.new(tr("File:")),0,0)
+		infoLayout.addWidget(Qt::Label.new(tr("Archivo:")),0,0)
 		infoLayout.addWidget(Qt::Label.new(file),0,1)
 		infoLayout.addWidget(shaLabel,1,0)
 		infoLayout.addWidget(@csLabel,1,1)
 		infoLayout.addWidget(authorLabel,2,0)
 		infoLayout.addWidget(@caLabel,2,1)
-		infoLayout.addWidget(authordateLabel,3,0)
-		infoLayout.addWidget(@cadLabel,3,1)
-		infoLayout.addWidget(committerdateLabel,4,0)
-		infoLayout.addWidget(@ccdLabel,4,1)
+		infoLayout.addWidget(committerdateLabel,3,0)
+		infoLayout.addWidget(@ccdLabel,3,1)
 
 
-		recFileLabel = Qt::Label.new(tr("Filename:"))
+		recFileLabel = Qt::Label.new(tr("Nuevo nombre:"))
 		@recLineEdit = Qt::LineEdit.new()
 		
 		@recuperarButton = Qt::PushButton.new(tr("&Recuperar"))		
@@ -71,17 +67,16 @@ class TimeMachineDialog < Qt::Dialog
 		
 		setLayout(centerLayout)
 
-		setWindowTitle(tr('TimeMachine - '+@filename+@extname ))
-		setFixedHeight(sizeHint().height())
+		setWindowTitle(tr('Versiones anteriores - '+@filename+@extname ))
+		#setFixedHeight(sizeHint().height())
 	end
 
 	def showCommitInfo(row)
 		if(row>=0)		
 			@csLabel.setText(@arr_commits[row]["sha"])
 			@caLabel.setText(@arr_commits[row]["author"])
-			@cadLabel.setText(@arr_commits[row]["a_date"].strftime("%d-%m-%Y %H:%M:%S"))
 			@ccdLabel.setText(@arr_commits[row]["c_date"].strftime("%d-%m-%Y %H:%M:%S"))
-			@recLineEdit.setText(@folder+"/"+@filename+"_"+@arr_commits[row]["c_date"].strftime("%d-%m-%Y_%H:%M:%S")+@extname)
+			@recLineEdit.setText(@filename+"_"+@arr_commits[row]["c_date"].strftime("%d-%m-%Y_%H:%M:%S")+@extname)
 
 			@selectedSha =  @arr_commits[row]["sha"]
 			@newFileName = @recLineEdit.text()
@@ -95,6 +90,10 @@ class TimeMachineDialog < Qt::Dialog
 	def getNewFileName()
 		#return @newFileName
 		return @recLineEdit.text()
+	end
+
+	def getFolder()
+		return @folder
 	end
 
 	def getSelectedSha()
