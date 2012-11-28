@@ -19,7 +19,7 @@ class Usuario
 	def iniciarSesion(login,password)
 		@cookie =ServerInterface::iniciarSesion(login,password)
 		@login = login
-		@password = password #ver...
+		@password = password 
 		TruecryptInterface::initDirs() if (@cookie !=nil)
 		return @cookie != nil
 	end
@@ -52,7 +52,6 @@ class Usuario
 		@projects = Array.new()		
 		proys = ServerInterface::listaProyectos(@cookie)
 		proys.each { |p_id|
-			#@proyectos.push(p['path'])
 			p_info = ServerInterface::infoProyecto(@cookie, p_id['project_id'])
 			@projects.push( Proyecto.new(p_info['id'], p_info['name'], p_info['description'], @login, p_id['type_id']) )
 		}

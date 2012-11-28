@@ -66,14 +66,10 @@ class Proyecto
 
 						fno = nombre+add_ours+File.extname(f)
 
-						puts fno
-						#en lugar de cambiarle el nombre a los 2 archivos, cambiarlo solo al que no es el nuestro
 						@git.checkout_file("--ours",f)
 						File.rename(@project_path+"/"+f,@project_path+"/"+fno)
 
 						fnt = nombre+add_theirs+File.extname(f)
-
-						puts fnt							
 
 						@git.checkout_file("--theirs",f)
 						File.rename(@project_path+"/"+f,@project_path+"/"+fnt)
