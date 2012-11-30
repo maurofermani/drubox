@@ -11,7 +11,9 @@ class RuboxTree < Qt::TreeWidget
 		@path = path
 		populate(self,@path)
 	end
-
+	
+	# A partir del directorio del proyecto, crea los nodos 
+	# que forman el árbol de archivos y directorios.
 	def populate(tree, path, parent=nil)
 		Dir["#{path}/*"].each do |file|
 			
@@ -41,7 +43,7 @@ class RuboxTree < Qt::TreeWidget
 		end
 	end
 
-
+	# Elimina del árbol el nodo correspondiente al archivo o carpeta seleccionado.
 	def removeSelectedItem()
 		item = selectedItems()
 		if (!item.empty?) and (File.exists?(path = item[0].text(3)))
@@ -63,6 +65,7 @@ class RuboxTree < Qt::TreeWidget
 		end
 	end
 
+	# Obtiene la ruta del archivo se seleccionado en el árbol.
 	def getSelectedFile()
 		item = selectedItems()
 		path = nil
@@ -75,6 +78,7 @@ class RuboxTree < Qt::TreeWidget
 		return path
 	end
 
+	# Obtiene la ruta de la carpeta seleccionada en el árbol.
 	def getSelectedFolder()
 		item = selectedItems()
 		folder = nil
@@ -87,11 +91,15 @@ class RuboxTree < Qt::TreeWidget
 		return folder
 	end
 	
+	# Actualiza los nodos del árbol de archivos y directorios 
+	# para reflejar los cambios en el directorio del proyecto.
 	def refresh()
 		clear()
 		populate(self,@path)
 	end
 
+	# A partir de una lista de archivos, busca en el árbol los nodos que los representan 
+	# y les cambia el icono de la columna estado al valor indicado.
 	def updateStatusIcons(files, iconPath, statusText)
 		files.each{ |f,s|
 			filePath = @path+"/"+s.path.to_s
@@ -107,6 +115,9 @@ class RuboxTree < Qt::TreeWidget
 		}
 	end
 
+	# A partir de una lista de archivos con estado eliminado, busca  en el árbol los nodos que 
+	# los representan y les cambia el icono de la columna estado al valor eliminado. En caso 
+	# de que existan los nodos correspondientes a los archivos o carpetas los agrega al árbol.
 	def updateStatusIconsDeleted(files, iconPath, statusText)
 
 		files.each{ |f,s|
@@ -165,6 +176,8 @@ class RuboxTree < Qt::TreeWidget
 		}
 	end
 
+	# Es el método que se invoca desde la interfaz gráfica DruboxGUI para actualizar la 
+	# columna estado de los archivos del proyecto cuando no existe ningún commit previo.
 	def updateNoCommitStatus(untracked)
 		untracked.each{ |u|
 			items = findItems(u, Qt::MatchCaseSensitive|Qt::MatchRecursive,3)
@@ -178,6 +191,9 @@ class RuboxTree < Qt::TreeWidget
 		
 	end
 
+	# Es el método que se invoca desde la interfaz gráfica DruboxGUI para actualizar 
+	# la columna estado de los archivos del proyecto. Utiliza los métodos updateStatusIcons 
+	# y updateStatusIconsDeleted.
 	def updateStatus(status)
 		updateStatusIcons(status.untracked, "./images/status_added.png", "")
 		updateStatusIcons(status.changed, "./images/status_changed.png", "")

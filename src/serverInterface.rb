@@ -7,6 +7,10 @@ class ServerInterface
 
 	@@http = Net::HTTP.new(YML::get("server_host"), YML::get("server_port").to_i)
 
+	# Realiza la autentificación del usuario contra el servidor Rails para luego poder consultar sus 
+	# proyectos. Usa la URL http://<server_host>:<server_port>/sessions pasando los parámetros del usuario 
+	# y contraseña con el método post y obtiene la cookie correspondiente que es enviada como header en
+	# el resto de los métodos.
 	def self.iniciarSesion(login,password)
 		begin		
 			url = "/sessions"
@@ -23,6 +27,7 @@ class ServerInterface
 		end
 	end
 
+	# Finaliza la sesión del usuario en el servidor Rails. Usa la URL http://<server_host>:<server_port>/logout
 	def self.cerrarSesion(cookie)
 		begin		
 			headers = {
@@ -33,7 +38,9 @@ class ServerInterface
 			raise ServerException, "Error en la conexion al cerrar sesion", caller
 		end
 	end
-
+	
+	# Obtiene desde el servidor el id de los proyectos a los que el usuario tiene acceso, junto con el tipo de 
+	# acceso, utilizando para ello la URL http://<server_host>:<server_port>/projects.json
 	def self.listaProyectos(cookie)
 		begin			
 			headers = {
@@ -52,6 +59,8 @@ class ServerInterface
 		end
 	end
 
+	# Obtiene información específica de un proyecto como el nombre y su descripción. Usa la URL 
+	# http://<server_host>:<server_port>/projects/<project_id>.json
 	def self.infoProyecto(cookie, id)
 		begin		
 			headers = {
@@ -70,20 +79,4 @@ class ServerInterface
 			raise ServerException, "Error en la conexion al obtener la informacion del proyecto", caller
 		end
 	end
-
-	#def self.infoUsuario(cookie, id)
-	#	headers = {
-	#		'Cookie' => cookie
-	#	}
-	#
-	#	resp, data = @@http.get("/users/#{id}.json",headers)
-	#
-	#	if (resp.class==Net::HTTPOK)
-	#		rh = JSON.parse(resp.body)
-	#		return rh
-	#	else
-	#		return nil
-	#	end	
-	#end
-		
 end

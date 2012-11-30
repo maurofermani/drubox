@@ -143,9 +143,6 @@ class DRuboxGUI < Qt::MainWindow
 	end
 
 	def enableActions(enable, accessType = 3)
-		#@iniciarSesionAction
-		#@cerrarSesionAction
-		#@salirAction
 		@addFileAction.setEnabled(enable)
 		@addFolderAction.setEnabled(enable)
 		@removeAction.setEnabled(enable)
@@ -440,7 +437,6 @@ end #class
 
 begin
   app = Qt::Application.new(ARGV)
-  #Qt::Application::setStyle("motif")
   window = DRuboxGUI.new()
   window.show()
   window.login()
