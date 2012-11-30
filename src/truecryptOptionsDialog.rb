@@ -1,7 +1,6 @@
 class TruecryptOptionsDialog < Qt::Dialog
 
-	MIN_SIZE = 0
-	MAX_SIZE = 0
+	MIN_SIZE = 10485760
 	DEFAULT_SIZE = 10485760 # 10 MB
 
 	slots 'calculateSize()'
@@ -62,7 +61,7 @@ class TruecryptOptionsDialog < Qt::Dialog
 				 mult = 1024 * 1024 * 1024
 			end
 			tmp_size = tmp_size.to_i * mult
-			@size = tmp_size #if (tmp_size>=MIN_SIZE) and (tmp_size<=MAX_SIZE)
+			@size = tmp_size if (tmp_size>=MIN_SIZE)
 		end
 		accept()
 	end

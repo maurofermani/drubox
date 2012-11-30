@@ -90,7 +90,7 @@ class DRuboxGUI < Qt::MainWindow
 		@downAction.setStatusTip(tr("Bajar los cambios del servidor..."))
 		connect(@downAction,SIGNAL('triggered()'),self,SLOT('download()'))
 
-		@timeMachineAction = Qt::Action.new(tr("&Maquina del tiempo"),self)
+		@timeMachineAction = Qt::Action.new(tr("&Versiones anteriores"),self)
 		@timeMachineAction.setIcon(Qt::Icon.new('./images/TimeMachine.png'))
 		@timeMachineAction.setStatusTip(tr("Obtener versiones pasadas de los archivos..."))
 		connect(@timeMachineAction,SIGNAL('triggered()'),self,SLOT('timeMachine()'))
